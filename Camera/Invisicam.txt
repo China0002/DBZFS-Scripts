@@ -1,0 +1,190 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local v1 = {};
+local v2 = {
+	CUSTOM = 1, 
+	LIMBS = 2, 
+	MOVEMENT = 3, 
+	CORNERS = 4, 
+	CIRCLE1 = 5, 
+	CIRCLE2 = 6, 
+	LIMBMOVE = 7
+};
+v1.MODE = v2;
+local l__RunService__3 = game:GetService("RunService");
+local l__LocalPlayer__4 = game:GetService("Players").LocalPlayer;
+local u1 = nil;
+local u2 = {};
+local u3 = nil;
+local u4 = nil;
+local u5 = { Vector3.new(1, 1, -1), Vector3.new(1, -1, -1), Vector3.new(-1, -1, -1), Vector3.new(-1, 1, -1) };
+local u6 = nil;
+local function v5(p1)
+	if u6 == v2.CIRCLE1 then
+		local v6 = u3.CFrame;
+	else
+		local l__CoordinateFrame__7 = u1.CoordinateFrame;
+		v6 = l__CoordinateFrame__7 - l__CoordinateFrame__7.p + u3.Position;
+	end;
+	table.insert(p1, v6.p);
+	for v8 = 0, 9 do
+		local v9 = 2 * math.pi / 10 * v8;
+		table.insert(p1, v6 * (3 * Vector3.new(math.cos(v9), math.sin(v9), 0)));
+	end;
+end;
+local function u7(p2)
+	for v10, v11 in pairs(u2) do
+		if v11.Parent then
+			table.insert(p2, v11.Position);
+		end;
+	end;
+end;
+local function u8(p3)
+	for v12 = 1, 3 do
+		local l__Velocity__13 = u3.Velocity;
+		table.insert(p3, u3.Position + (v12 - 1) * u3.CFrame.lookVector * (Vector3.new(l__Velocity__13.X, 0, l__Velocity__13.Z).Magnitude / 2));
+	end;
+end;
+local u9 = {
+	Head = true, 
+	["Left Arm"] = true, 
+	["Right Arm"] = true, 
+	["Left Leg"] = true, 
+	["Right Leg"] = true
+};
+local function v14(p4)
+	u4 = p4;
+	u3 = u4:WaitForChild("HumanoidRootPart");
+	u2 = {};
+	for v15, v16 in pairs(u4:GetChildren()) do
+		if v16:IsA("BasePart") and u9[v16.Name] then
+			table.insert(u2, v16);
+		end;
+	end;
+end;
+local function v17(p5)
+	if p5 == "CurrentCamera" then
+		local l__CurrentCamera__18 = workspace.CurrentCamera;
+		if l__CurrentCamera__18 then
+			u1 = l__CurrentCamera__18;
+		end;
+	end;
+end;
+local u10 = {};
+local u11 = {};
+local function u12(p6, p7)
+	local l__p__19 = u1.CoordinateFrame.p;
+	local v20 = p6 - l__p__19;
+	return workspace:FindPartOnRayWithIgnoreList(Ray.new(l__p__19, v20.Unit * math.min(v20.Magnitude, 999)), p7);
+end;
+function v1.Update(p8)
+	local v21 = {};
+	u10[u6](v21);
+	local v22 = { u4 };
+	local u13 = {};
+	local function v23(p9)
+		u13[p9] = true;
+		if not u11[p9] then
+			u11[p9] = p9.LocalTransparencyModifier;
+		end;
+	end;
+	for v24, v25 in pairs(v21) do
+		while true do
+			local v26 = u12(v25, v22);
+			if v26 then
+				v23(v26);
+				for v27, v28 in pairs(v26:GetChildren()) do
+					if v28:IsA("Decal") or v28:IsA("Texture") then
+						v23(v28);
+					end;
+				end;
+				table.insert(v22, v26);
+			end;
+			if not v26 then
+				break;
+			end;		
+		end;
+	end;
+	local v29, v30, v31 = pairs(u11);
+	while true do
+		local v32 = nil;
+		local v33, v34 = v29(v30, v31);
+		if not v33 then
+			break;
+		end;
+		v31 = v33;
+		v32 = v33.LocalTransparencyModifier;
+		if u13[v33] then
+			if v32 < 0.75 then
+				v33.LocalTransparencyModifier = math.min(v32 + 0.1, 0.75);
+			end;
+		elseif v34 < v32 then
+			v33.LocalTransparencyModifier = math.max(v34, v32 - 0.1);
+		else
+			u11[v33] = nil;
+		end;	
+	end;
+end;
+local function u14(p10, ...)
+	local v35 = {};
+	local v36 = "";
+	for v37, v38 in pairs({ ... }) do
+		v35[v38] = true;
+		if v36 == "" then
+			local v39 = "";
+		else
+			v39 = " or ";
+		end;
+		v36 = v36 .. v39 .. v38;
+	end;
+	local v40 = type(p10);
+	assert(v35[v40], v36 .. " type expected, got: " .. v40);
+end;
+function v1.SetMode(p11, p12)
+	u14(p12, "number");
+	for v41, v42 in pairs(v2) do
+		if v42 == p12 then
+			u6 = p12;
+			return;
+		end;
+	end;
+	error("Invalid mode number");
+end;
+function v1.SetCustomBehavior(p13, p14)
+	u14(p14, "function");
+	u10[v2.CUSTOM] = p14;
+end;
+function v1.Cleanup(p15)
+	for v43, v44 in pairs(u11) do
+		v43.LocalTransparencyModifier = v44;
+	end;
+end;
+workspace.Changed:connect(v17);
+v17("CurrentCamera");
+l__LocalPlayer__4.CharacterAdded:connect(v14);
+if l__LocalPlayer__4.Character then
+	v14(l__LocalPlayer__4.Character);
+end;
+v1:SetMode(v2.LIMBS);
+u10[v2.CUSTOM] = function()
+
+end;
+u10[v2.LIMBS] = u7;
+u10[v2.MOVEMENT] = u8;
+u10[v2.CORNERS] = function(p16)
+	local l__CFrame__45 = u3.CFrame;
+	local l__p__46 = l__CFrame__45.p;
+	local v47 = l__CFrame__45 - l__p__46;
+	local v48 = u4:GetExtentsSize() / 2;
+	table.insert(p16, l__p__46);
+	for v49, v50 in pairs(u5) do
+		table.insert(p16, l__p__46 + v47 * (v48 * v50));
+	end;
+end;
+u10[v2.CIRCLE1] = v5;
+u10[v2.CIRCLE2] = v5;
+u10[v2.LIMBMOVE] = function(p17)
+	u7(p17);
+	u8(p17);
+end;
+return v1;

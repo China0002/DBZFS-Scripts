@@ -1,0 +1,32 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local u1 = require(script.Parent);
+local l__Players__2 = game:GetService("Players");
+return function()
+	local u3 = tick();
+	local u4 = u1();
+	function u4.Update(p1)
+		local v1 = tick();
+		if p1.UserPanningTheCamera ~= true then
+
+		end;
+		local l__CurrentCamera__2 = workspace.CurrentCamera;
+		if u3 == nil or v1 - u3 > 1 then
+			u4:ResetCameraLook();
+			p1.LastCameraTransform = nil;
+		end;
+		local v3 = p1:GetSubjectPosition();
+		if v3 and l__Players__2.LocalPlayer and l__CurrentCamera__2 then
+			local v4 = p1:GetCameraZoom();
+			if v4 <= 0 then
+				v4 = 0.1;
+			end;
+			p1.RotateInput = Vector2.new();
+			l__CurrentCamera__2.Focus = CFrame.new(v3);
+			l__CurrentCamera__2.CoordinateFrame = CFrame.new(l__CurrentCamera__2.Focus.p - v4 * p1:RotateCamera(p1:GetCameraLook(), p1.RotateInput), l__CurrentCamera__2.Focus.p);
+			p1.LastCameraTransform = l__CurrentCamera__2.CoordinateFrame;
+		end;
+		u3 = v1;
+	end;
+	return u4;
+end;

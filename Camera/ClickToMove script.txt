@@ -1,0 +1,1137 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local l__UserInputService__1 = game:GetService("UserInputService");
+local l__PathfindingService__2 = game:GetService("PathfindingService");
+local l__RunService__3 = game:GetService("RunService");
+local l__Debris__4 = game:GetService("Debris");
+local l__ReplicatedStorage__5 = game:GetService("ReplicatedStorage");
+local v6 = require(script.Parent:WaitForChild("RootCamera"):WaitForChild("ClassicCamera"));
+local l__localPlayer__7 = game:GetService("Players").localPlayer;
+local l__mouse__8 = l__localPlayer__7:GetMouse();
+local l__FindPartsInRegion3__9 = workspace.FindPartsInRegion3;
+local v10 = nil;
+if l__UserInputService__1.TouchEnabled then
+	v10 = Instance.new("BindableEvent");
+	v10.Name = "OnClickToMoveFailStateChange";
+	v10.Parent = script.Parent.Parent;
+end;
+local v11 = {
+	Signal = {
+		Create = function()
+			local v12 = {};
+			local u1 = nil;
+			local u2 = nil;
+			local u3 = Instance.new("BindableEvent");
+			function v12.fire(p1, ...)
+				u1 = { ... };
+				u2 = select("#", ...);
+				u3:Fire();
+			end;
+			function v12.connect(p2, p3)
+				if not p3 then
+					error("connect(nil)", 2);
+				end;
+				return u3.Event:connect(function()
+					p3(unpack(u1, 1, u2));
+				end);
+			end;
+			function v12.wait(p4)
+				u3.Event:wait();
+				assert(u1, "Missing arg data, likely due to :TweenSize/Position corrupting threadrefs.");
+				return unpack(u1, 1, u2);
+			end;
+			return v12;
+		end
+	}, 
+	Create = function(p5)
+		return function(p6)
+			local v13 = Instance.new(p5);
+			local v14, v15, v16 = pairs(p6);
+			while true do
+				local v17 = nil;
+				local v18 = nil;
+				v18, v17 = v14(v15, v16);
+				if not v18 then
+					break;
+				end;
+				v16 = v18;
+				if type(v18) == "number" then
+					v17.Parent = v13;
+				else
+					v13[v18] = v17;
+				end;			
+			end;
+			return v13;
+		end;
+	end, 
+	Clamp = function(p7, p8, p9)
+		return math.max(math.min(p8, p9), p7);
+	end
+};
+local function v19()
+	local l__CurrentCamera__20 = workspace.CurrentCamera;
+	local v21 = l__CurrentCamera__20 and l__CurrentCamera__20.ViewportSize.X or 0;
+	local v22 = l__CurrentCamera__20 and l__CurrentCamera__20.ViewportSize.Y or 0;
+	if v21 == 0 then
+		return 1024;
+	end;
+	if v22 < v21 then
+		return v21;
+	end;
+	return v22;
+end;
+v11.ViewSizeX = v19;
+local function v23()
+	local l__CurrentCamera__24 = workspace.CurrentCamera;
+	local v25 = l__CurrentCamera__24 and l__CurrentCamera__24.ViewportSize.X or 0;
+	local v26 = l__CurrentCamera__24 and l__CurrentCamera__24.ViewportSize.Y or 0;
+	if v26 == 0 then
+		return 768;
+	end;
+	if v26 < v25 then
+		return v26;
+	end;
+	return v25;
+end;
+v11.ViewSizeY = v23;
+local u4 = v19;
+local u5 = v23;
+function v11.AspectRatio()
+	return u4() / u5();
+end;
+local u6 = function(p10)
+	if not p10 then
+		return;
+	end;
+	local l__Humanoid__27 = p10:FindFirstChild("Humanoid");
+	if l__Humanoid__27 then
+		return p10, l__Humanoid__27;
+	end;
+	return u6(p10.Parent);
+end;
+v11.FindChacterAncestor = u6;
+function v11.GetUnitRay(p11, p12, p13, p14, p15)
+	return p15:ScreenPointToRay(p11, p12);
+end;
+local u7 = workspace.FindPartOnRayWithIgnoreList;
+local u8 = function(p16, p17, p18)
+	local v28 = p18 or {};
+	local v29, v30 = u7(workspace, p16, v28);
+	if not v29 then
+		return nil, nil;
+	end;
+	if not p17 or v29.CanCollide ~= false then
+		return v29, v30;
+	end;
+	table.insert(v28, v29);
+	return u8(p16, p17, v28);
+end;
+v11.Raycast = u8;
+function v11.Round(p19, p20)
+	p20 = p20 and 1;
+	return math.floor((p19 + p20 / 2) / p20) * p20;
+end;
+function v11.AveragePoints(p21)
+	local v31 = Vector2.new(0, 0);
+	if #p21 > 0 then
+		for v32 = 1, #p21 do
+			v31 = v31 + p21[v32];
+		end;
+		v31 = local v33 / #p21;
+	end;
+	return v31;
+end;
+function v11.FuzzyEquals(p22, p23)
+	local v34 = false;
+	if p23 < p22 + 0.1 then
+		v34 = p22 - 0.1 < p23;
+	end;
+	return v34;
+end;
+local u9 = 0;
+l__UserInputService__1.InputBegan:connect(function(p24, p25)
+	if not p25 and (p24.UserInputType == Enum.UserInputType.Touch or p24.UserInputType == Enum.UserInputType.MouseButton1 or p24.UserInputType == Enum.UserInputType.MouseButton2) then
+		u9 = tick();
+	end;
+end);
+function v11.GetLastInput()
+	return u9;
+end;
+local u10 = {};
+u4 = function(p26, p27)
+	local l__components__35 = CFrame.new().components;
+	local l__inverse__36 = CFrame.new().inverse;
+	local v37 = 1 / math.sqrt(2);
+	local v38, v39, v40, v41, v42, v43, v44, v45, v46, v47, v48, v49 = l__components__35(l__inverse__36(p26) * p27);
+	local v50 = (v41 + v45 + v49 - 1) / 2;
+	local v51 = Vector3.new(v48 - v46, v43 - v47, v44 - v42);
+	local v52 = p27.p - p26.p;
+	if v50 >= 0.999 then
+		return 0, function(p28)
+			return p26 + v52 * p28;
+		end;
+	end;
+	if v50 <= -0.999 then
+		local v53 = math.pi;
+		local v54 = (v41 + 1) / 2;
+		local v55 = (v45 + 1) / 2;
+		local v56 = (v49 + 1) / 2;
+		if v55 < v54 and v56 < v54 then
+			if v54 < 0.001 then
+				v51 = Vector3.new(0, v37, v37);
+			else
+				local v57 = math.sqrt(v54);
+				v51 = Vector3.new(v57, (v44 + v42) / 4 / v57, (v47 + v43) / 4 / v57);
+			end;
+		elseif v56 < v55 then
+			if v55 < 0.001 then
+				v51 = Vector3.new(v37, 0, v37);
+			else
+				local v58 = math.sqrt(v55);
+				v51 = Vector3.new((v44 + v42) / 4 / v58, v58, (v48 + v46) / 4 / v58);
+			end;
+		elseif v56 < 0.001 then
+			v51 = Vector3.new(v37, v37, 0);
+		else
+			local v59 = math.sqrt(v56);
+			v51 = Vector3.new((v47 + v43) / 4 / v59, (v48 + v46) / 4 / v59, v59);
+		end;
+	else
+		v53 = math.acos(v50);
+	end;
+	local l__CFrame_fromAxisAngle__11 = CFrame.fromAxisAngle;
+	return v53, function(p29)
+		return p26 * l__CFrame_fromAxisAngle__11(v51, v53 * p29) + v52 * p29;
+	end;
+end;
+u5 = v11.Signal;
+local function u12(p30)
+	local v60 = p30 and p30.Character;
+	if v60 then
+		local v61 = u10[p30];
+		if v61 and v61.Parent == v60 then
+			return v61;
+		end;
+		u10[p30] = nil;
+		for v62, v63 in pairs(v60:GetChildren()) do
+			if v63:IsA("Humanoid") then
+				u10[p30] = v63;
+				return v63;
+			end;
+		end;
+	end;
+end;
+u6 = function()
+	local u13 = {
+		TorsoLookPoint = nil, 
+		SetTorsoLookPoint = function(p31, p32)
+			local v64 = u12(l__localPlayer__7);
+			if v64 then
+				v64.AutoRotate = false;
+			end;
+			u13.TorsoLookPoint = p32;
+			p31:UpdateTorso();
+			delay(2, function()
+				if u13.TorsoLookPoint == p32 then
+					u13.TorsoLookPoint = nil;
+					if v64 then
+						v64.AutoRotate = true;
+					end;
+				end;
+			end);
+		end, 
+		UpdateTorso = function(p33, p34)
+			if not u13.TorsoLookPoint then
+				return;
+			end;
+			p34 = u13.TorsoLookPoint;
+			local v65 = u12(l__localPlayer__7);
+			local v66 = v65 and v65.Torso;
+			if v66 then
+				local l__unit__67 = (p34 - v66.CFrame.p).unit;
+				v66.CFrame = CFrame.new(v66.CFrame.p, v66.CFrame.p + Vector3.new(l__unit__67.X, 0, l__unit__67.Z).unit);
+			end;
+		end
+	};
+	return u13;
+end;
+u7 = function()
+	return l__localPlayer__7 and l__localPlayer__7.Character;
+end;
+u8 = function()
+	local v68 = u12(l__localPlayer__7);
+	return v68 and v68.Torso;
+end;
+local u14 = workspace.FindPartOnRayWithIgnoreList;
+local function u15(p35)
+	return p35 and (p35.Parent and p35.Parent:FindFirstChild("Humanoid") ~= nil);
+end;
+local u16 = {
+	[Enum.HumanoidStateType.FallingDown] = false, 
+	[Enum.HumanoidStateType.Flying] = false, 
+	[Enum.HumanoidStateType.Freefall] = false, 
+	[Enum.HumanoidStateType.GettingUp] = false, 
+	[Enum.HumanoidStateType.Ragdoll] = false, 
+	[Enum.HumanoidStateType.Running] = false, 
+	[Enum.HumanoidStateType.Seated] = false, 
+	[Enum.HumanoidStateType.Swimming] = false, 
+	[Enum.HumanoidStateType.Climbing] = false
+};
+local function u17()
+	return true;
+end;
+local function u18()
+	local v69 = u12(l__localPlayer__7);
+	local v70 = v69 and v69:GetState();
+	if not v70 then
+		return false;
+	end;
+	return u16[v70] == nil;
+end;
+local function u19()
+	return Vector3.new(1, 1, 1);
+end;
+local function u20(p36)
+	return p36.magnitude < 0.05;
+end;
+local function u21()
+	local v71 = u7();
+	if v71 == nil then
+		return;
+	end;
+	local v72 = u12(l__localPlayer__7);
+	if v72 == nil then
+		return;
+	end;
+	local v73 = u8();
+	if v73 == nil then
+		return;
+	end;
+	local l__CFrame__74 = v73.CFrame;
+	local l__lookVector__75 = l__CFrame__74.lookVector;
+	local l__p__76 = l__CFrame__74.p;
+	local v77 = Ray.new(l__p__76 + Vector3.new(0, 7 - v73.Size.Y, 0), l__lookVector__75 * 1.5);
+	local v78, v79 = u14(workspace, Ray.new(l__p__76 + Vector3.new(0, -v73.Size.Y / 2, 0), l__lookVector__75 * 1.5), { v71 }, false);
+	local v80, v81 = u14(workspace, v77, { v71 }, false);
+	if v78 and v80 == nil and v78.CanCollide == true and not u15(v78) then
+		v72.Jump = true;
+	end;
+end;
+local function u22(p37)
+	if u17() and u18() and not u20((u19())) then
+		u21();
+	end;
+end;
+local l__Create__23 = v11.Create;
+local u24 = u6();
+local u25 = nil;
+local u26 = nil;
+local u27 = nil;
+local u28 = nil;
+local u29 = 1;
+local function u30(p38)
+	local v82 = u12(l__localPlayer__7);
+	local v83 = false;
+	if v82 ~= nil then
+		v83 = v82.Health > 0;
+	end;
+	return v83;
+end;
+local function u31()
+	if u25 then
+		u25:Cancel();
+	end;
+	if u26 then
+		u26:disconnect();
+		u26 = nil;
+	end;
+	if u27 then
+		u27:disconnect();
+		u27 = nil;
+	end;
+	if u28 then
+		l__Debris__4:AddItem(u28, 0);
+		u28 = nil;
+	end;
+end;
+local u32 = 0;
+local function u33(p39)
+	if p39 ~= nil then
+		for v84, v85 in pairs(p39:GetChildren()) do
+			if v85:IsA("Tool") then
+				return v85;
+			end;
+		end;
+	end;
+end;
+local function u34(p40, p41)
+	local u35 = {
+		Cancelled = false, 
+		Started = false, 
+		Finished = u5.Create(), 
+		PathFailed = u5.Create(), 
+		PathStarted = u5.Create(), 
+		PathComputed = false, 
+		YieldUntilPointReached = function(p42, p43, p44, p45)
+			p45 = p45 and 10000000;
+			local v86 = u12(l__localPlayer__7);
+			local v87 = v86 and v86.Torso;
+			local v88 = tick();
+			local v89 = v88;
+			while v87 and tick() - v88 < p45 and u35.Cancelled == false do
+				local v90 = p44 - v87.CFrame.p;
+				local l__magnitude__91 = (v90 * Vector3.new(1, 0, 1)).magnitude;
+				if l__magnitude__91 < 6 and v90.Y >= 2.2 then
+					v86.Jump = true;
+				end;
+				if l__magnitude__91 < 2 then
+					return true;
+				end;
+				if tick() - v89 > 1.5 then
+					v86:MoveTo(p44);
+					v89 = tick();
+				end;
+				u24:UpdateTorso(p44);
+				wait();			
+			end;
+			return false;
+		end, 
+		Cancel = function(p46)
+			u35.Cancelled = true;
+			local v92 = u12(l__localPlayer__7);
+			local v93 = v92 and v92.Torso;
+			if v92 and v93 then
+				v92:MoveTo(v93.CFrame.p);
+			end;
+		end, 
+		CheckOcclusion = function(p47, p48, p49, p50, p51)
+			local v94 = u12(l__localPlayer__7);
+			local v95 = v94 and v94.Torso;
+			if p51 == nil then
+				p51 = v95 and Vector3.new(v95.Size.X / 2, 0, v95.Size.Z / 2) or Vector3.new(1, 0, 1);
+			end;
+			local v96 = p49 - p48;
+			local l__unit__97 = v96.unit;
+			local v98 = Vector3.new(0, 1, 0):Cross(l__unit__97) * p51;
+			local v99, v100 = v11.Raycast(Ray.new(p48 + v98, v96 + v98), true, { p50 });
+			local v101, v102 = v11.Raycast(Ray.new(p48, v96), true, { p50 });
+			local v103, v104 = v11.Raycast(Ray.new(p48 - v98, v96 - v98), true, { p50 });
+			if not (not v99) or not (not v101) or v103 then
+				return false;
+			end;
+			for v105 = 1, math.floor(v96.magnitude / 2) do
+				local v106, v107 = v11.Raycast(Ray.new(p48 + l__unit__97 * v105 * 2, Vector3.new(0, -7, 0)), true, { p50 });
+				if not v106 then
+					return false;
+				end;
+			end;
+			return true;
+		end
+	};
+	function u35.SmoothPoints(p52, p53)
+		local v108 = {};
+		local v109 = u12(l__localPlayer__7);
+		local v110 = v109 and v109.Torso;
+		for v111 = 1, #p53 do
+			table.insert(v108, p53[v111]);
+		end;
+		for v112 = #v108 - 1, 1, -1 do
+			if v112 + 1 <= #v108 then
+				local v113 = v108[v112 + 1];
+				local v114 = v108[v112];
+				local v115 = v108[v112 - 1];
+				if v115 == nil then
+					v115 = v110 and Vector3.new(v110.CFrame.p.X, v114.Y, v110.CFrame.p.Z);
+				end;
+				if v115 and v11.FuzzyEquals(v114.Y, v115.Y) and v11.FuzzyEquals(v114.Y, v113.Y) and u35:CheckOcclusion(v115, v113, p40) then
+					table.remove(v108, v112);
+				end;
+			end;
+		end;
+		return v108;
+	end;
+	function u35.CheckNeighboringCells(p54, p55)
+		local v116 = {};
+		local v117 = u12(l__localPlayer__7);
+		local v118 = p55 and (v117 and v117.Torso);
+		if v118 then
+			local l__p__119 = v118.CFrame.p;
+			local v120 = Vector3.new(v11.Round(l__p__119.X - 2, 4) + 2, v11.Round(l__p__119.Y - 2, 4) + 2, v11.Round(l__p__119.Z - 2, 4) + 2);
+			local v121 = {};
+			for v122 = -4, 4, 8 do
+				for v123 = -4, 4, 8 do
+					table.insert(v121, v120 + Vector3.new(v122, 0, v123));
+				end;
+			end;
+			for v124, v125 in pairs(v121) do
+				if u35:CheckOcclusion(v120, v125, p55, Vector3.new(0, 0, 0)) then
+					table.insert(v116, v125);
+				end;
+			end;
+		end;
+		return v116;
+	end;
+	function u35.ComputeDirectPath(p56)
+		local v126 = nil;
+		local v127 = u12(l__localPlayer__7);
+		local v128 = v127 and v127.Torso;
+		if v128 then
+			local l__p__129 = v128.CFrame.p;
+			if (p41 - l__p__129).magnitude < 150 then
+				v126 = p41 - (p41 - l__p__129).unit * 2;
+				if not u35:CheckOcclusion(l__p__129, v126, p40, Vector3.new(0, 0, 0)) then
+					return;
+				end;
+			else
+				return;
+			end;
+		else
+			return;
+		end;
+		local v130 = {
+			Status = Enum.PathStatus.Success
+		};
+		function v130.GetPointCoordinates(p57)
+			return { v126 };
+		end;
+		return v130;
+	end;
+	local function u36(p58, p59, p60)
+		local v131 = false;
+		if math.abs(p58.X - p59.X) <= p60 then
+			v131 = false;
+			if math.abs(p58.Y - p59.Y) <= p60 then
+				v131 = math.abs(p58.Z - p59.Z) <= p60;
+			end;
+		end;
+		return v131;
+	end;
+	function u35.ComputePath(p61)
+		local v132 = u12(l__localPlayer__7);
+		local v133 = v132 and v132.Torso;
+		if v133 then
+			if u35.PathComputed then
+				return;
+			end;
+			u35.PathComputed = true;
+			local u37 = false;
+			if not pcall(function()
+				u35.pathResult = l__PathfindingService__2:ComputeSmoothPathAsync(v133.CFrame.p - Vector3.new(0, 3, 0), p41, 400);
+				u37 = true;
+			end) then
+				u35.pathResult = l__PathfindingService__2:ComputeRawPathAsync(v133.CFrame.p - Vector3.new(0, 3, 0), p41, 400);
+				u37 = false;
+			end;
+			u35.pointList = u35.pathResult and u35.pathResult:GetPointCoordinates();
+			local v134 = false;
+			if u35.pathResult.Status == Enum.PathStatus.FailFinishNotEmpty then
+				local v135 = p41 - workspace.CurrentCamera.CoordinateFrame.p;
+				if v135.magnitude > 2 then
+					local u38 = p41 - v135.unit * 2.1;
+					if not pcall(function()
+						u35.pathResult = l__PathfindingService__2:ComputeSmoothPathAsync(v133.CFrame.p, u38, 400);
+						u37 = true;
+					end) then
+						u35.pathResult = l__PathfindingService__2:ComputeRawPathAsync(v133.CFrame.p, u38, 400);
+						u37 = false;
+					end;
+					u35.pointList = u35.pathResult and u35.pathResult:GetPointCoordinates();
+					v134 = true;
+				end;
+			end;
+			if u35.pathResult.Status == Enum.PathStatus.ClosestNoPath and #u35.pointList >= 1 and v134 == false then
+				local v136 = u35.pointList[#u35.pointList];
+				if u36(p41, v136, 4) and (v136 - p41).magnitude < (v133.CFrame.p - p41).magnitude then
+					u35.pathResult = {
+						Status = Enum.PathStatus.Success, 
+						GetPointCoordinates = function(p62)
+							return { u35.pointList };
+						end
+					};
+					v134 = true;
+				end;
+			end;
+			if (u35.pathResult.Status == Enum.PathStatus.FailStartNotEmpty or u35.pathResult.Status == Enum.PathStatus.ClosestNoPath) and v134 == false then
+				local v137, v138, v139 = pairs((u35:CheckNeighboringCells(p40)));
+				while true do
+					local v140, v141 = v137(v138, v139);
+					if not v140 then
+						break;
+					end;
+					local u39 = nil;
+					if not pcall(function()
+						u39 = l__PathfindingService__2:ComputeSmoothPathAsync(v141, p41, 400);
+						u37 = true;
+					end) then
+						u39 = l__PathfindingService__2:ComputeRawPathAsync(v141, p41, 400);
+						u37 = false;
+					end;
+					if u39 and u39.Status == Enum.PathStatus.Success then
+						u35.pathResult = u39;
+						if u35.pathResult then
+							u35.pointList = u35.pathResult:GetPointCoordinates();
+							table.insert(u35.pointList, 1, v141);
+						end;
+						break;
+					end;				
+				end;
+			end;
+		end;
+		return false;
+	end;
+	function u35.IsValidPath(p63)
+		u35:ComputePath();
+		return u35.pathResult.Status == Enum.PathStatus.Success;
+	end;
+	function u35.GetPathStatus(p64)
+		u35:ComputePath();
+		return u35.pathResult.Status;
+	end;
+	function u35.Start(p65)
+		spawn(function()
+			local v142 = u12(l__localPlayer__7);
+			local v143 = v142 and v142.Torso;
+			if v143 then
+				if u35.Started then
+					return;
+				end;
+				u35.Started = true;
+				local v144 = u35:ComputePath();
+				if not u35:IsValidPath() then
+					u35.PathFailed:fire();
+					return;
+				end;
+			else
+				u35.PathFailed:fire();
+				return;
+			end;
+			u35.PathStarted:fire();
+			local v145 = v144 and u35.pointList or u35:SmoothPoints(u35.pointList);
+			for v146, v147 in pairs(v145) do
+				if v142 then
+					if u35.Cancelled then
+						return;
+					end;
+					v142:MoveTo(v147);
+					local v148 = Vector3.new(1, 0, 1);
+					local v149 = 10;
+					if math.abs(v142.WalkSpeed) > 0 then
+						v149 = ((v143.CFrame.p - v147) * v148).magnitude / math.abs(v142.WalkSpeed);
+					end;
+					if v146 == 1 and CameraModule then
+						local v150, v151 = CameraModule:TweenCameraLook((CameraModule:LookAtPreserveHeight(v145[#v145])));
+					end;
+					if (v142.Torso.CFrame.p - v147).magnitude > 9 then
+						local u40 = true;
+						spawn(function()
+							while u40 and u35.Cancelled == false do
+								if CameraModule and (tick() - v11.GetLastInput() > 2 and workspace.CurrentCamera.FieldOfView / 2 < math.deg(math.acos((CameraModule:GetCameraLook() * Vector3.new(1, 0, 1)).unit:Dot(((v147 - workspace.CurrentCamera.CoordinateFrame.p) * Vector3.new(1, 0, 1)).unit)))) then
+									local v152, v153 = CameraModule:TweenCameraLook((CameraModule:LookAtPreserveHeight(v147)));
+								end;
+								wait(0.1);							
+							end;
+						end);
+					end;
+					if not u35:YieldUntilPointReached(p40, v147, v149 * 3 + 1) then
+						u35.PathFailed:fire();
+						return;
+					end;
+				end;
+			end;
+			u35.Finished:fire();
+		end);
+	end;
+	return u35;
+end;
+local u41 = 0;
+local function u42(p66)
+	return l__Create__23("Part")({
+		Name = "PathGlobe", 
+		TopSurface = "Smooth", 
+		BottomSurface = "Smooth", 
+		Shape = "Ball", 
+		CanCollide = false, 
+		Size = Vector3.new(2, 2, 2), 
+		BrickColor = BrickColor.new("Institutional white"), 
+		Transparency = 0, 
+		Anchored = true, 
+		CFrame = CFrame.new(p66)
+	});
+end;
+local u43 = nil;
+local function u44(p67, p68)
+	local v154 = {};
+	for v155 = 0, 15 do
+		table.insert(v154, CFrame.Angles(0, math.pi / 8 * v155, 0) * p68);
+	end;
+	local u45 = {};
+	for v156, v157 in pairs(v154) do
+		local v158, v159 = v11.Raycast(Ray.new(p67, v157 * 40), true, { l__localPlayer__7.Character });
+		if v159 then
+			table.insert(u45, {
+				Vector = v157, 
+				Distance = (v159 - p67).magnitude
+			});
+		else
+			table.insert(u45, {
+				Vector = v157, 
+				Distance = 40
+			});
+		end;
+	end;
+	(function()
+		for v160, v161 in pairs(u45) do
+			v161.Value = ((-1 * p68):Dot(v161.Vector) + 1) / 2 * (v161.Distance / 40);
+		end;
+	end)();
+	table.sort(u45, function(p69, p70)
+		return p70.Value < p69.Value;
+	end);
+	return u45;
+end;
+local function u46(p71)
+	local u47 = tick();
+	local l__BrickColor__48 = p71.BrickColor;
+	local u49 = BrickColor.new("Really red");
+	spawn(function()
+		while p71 and tick() - u47 < 4 do
+			p71.BrickColor = l__BrickColor__48;
+			wait(0.13);
+			if p71 then
+				p71.BrickColor = u49;
+			end;
+			wait(0.13);		
+		end;
+	end);
+end;
+local function u50(p72)
+	local v162 = math.min(v11.ViewSizeY() * 0.33, 250);
+	local v163 = false;
+	if p72.X <= v162 then
+		v163 = v11.ViewSizeY() - v162 < p72.Y;
+	end;
+	return v163;
+end;
+local function u51(p73)
+	local v164 = math.min(v11.ViewSizeY() * 0.33, 250);
+	local v165 = false;
+	if v11.ViewSizeX() - v164 <= p73.X then
+		v165 = v11.ViewSizeY() - v164 < p73.Y;
+	end;
+	return v165;
+end;
+local function u52(p74)
+	u29 = u29 + 1;
+	local l__CurrentCamera__166 = workspace.CurrentCamera;
+	local l__Character__167 = l__localPlayer__7.Character;
+	if not u30(l__Character__167) then
+		return;
+	end;
+	if #p74 == 1 then
+		if l__CurrentCamera__166 then
+			local v168 = v11.GetUnitRay(p74[1].x, p74[1].y, l__mouse__8.ViewSizeX, l__mouse__8.ViewSizeY, l__CurrentCamera__166);
+			local v169, v170 = v11.Raycast(Ray.new(v168.Origin, v168.Direction * 400), true, { l__Character__167 });
+			local v171, v172 = v11.FindChacterAncestor(v169);
+			local v173 = l__Character__167 and (l__Character__167:FindFirstChild("Humanoid") and l__Character__167:FindFirstChild("Humanoid").Torso);
+			if v171 and v172 and v172.Torso and (v172.Torso.CFrame.p - v173.CFrame.p).magnitude < 7 then
+				u31();
+				local v174 = u12(l__localPlayer__7);
+				if v174 then
+					v174:MoveTo(v170);
+				end;
+				u32 = u32 + 1;
+				local v175 = u33(l__Character__167);
+				if v175 then
+					v175:Activate();
+					LastFired = tick();
+					return;
+				end;
+			elseif v170 and l__Character__167 then
+				local v176 = u34(l__Character__167, v170);
+				if v176:IsValidPath() then
+					u41 = 0;
+					l__localPlayer__7:Move(Vector3.new(1, 0, 0));
+					l__localPlayer__7:Move(Vector3.new(0, 0, 0));
+					v176:Start();
+					if v10 then
+						v10:Fire(false);
+					end;
+					u31();
+					local v177 = u42(v170);
+					v177.Parent = l__CurrentCamera__166;
+					u25 = v176;
+					u28 = v177;
+					if u43 then
+						u43:Run();
+					end;
+					local u53 = v177;
+					local l__p__54 = v173.CFrame.p;
+					u26 = v176.Finished:connect(function()
+						if u43 then
+							u43:Stop();
+						end;
+						if u53 then
+							if u28 == u53 then
+								u28 = nil;
+							end;
+							l__Debris__4:AddItem(u53, 0);
+							u53 = nil;
+						end;
+						if v171 then
+							local v178 = u12(l__localPlayer__7);
+							u32 = u32 + 1;
+							local v179 = u33(l__Character__167);
+							if v179 then
+								v179:Activate();
+								LastFired = tick();
+							end;
+							if v178 then
+								v178:MoveTo(v170);
+							end;
+						end;
+						local v180 = v173 and v173.CFrame.p;
+						if v180 and l__p__54 and tick() - v11.GetLastInput() > 2 then
+							local v181 = u44(v180, ((l__p__54 - v180) * Vector3.new(1, 0, 1)).unit);
+							if v181[1] and v181[1].Vector and v181[1].Vector.magnitude >= 0.5 and v181[1].Distance > 3 and CameraModule then
+								local v182, v183 = CameraModule:TweenCameraLook((CameraModule:LookAtPreserveHeight(v180 + v181[1].Vector * v181[1].Distance)));
+							end;
+						end;
+					end);
+					u27 = v176.PathFailed:connect(function()
+						if u43 then
+							u43:Stop();
+						end;
+						if u53 then
+							u46(u53);
+							l__Debris__4:AddItem(u53, 3);
+						end;
+					end);
+					return;
+				elseif v170 then
+					local v184 = u42(v170);
+					u46(v184);
+					l__Debris__4:AddItem(v184, 1);
+					v184.Parent = l__CurrentCamera__166;
+					if u28 == nil then
+						u41 = u41 + 1;
+						if u41 >= 3 then
+							if v10 then
+								v10:Fire(true);
+							end;
+							u31();
+							return;
+						end;
+					end;
+				end;
+			end;
+		end;
+	elseif #p74 >= 2 and l__CurrentCamera__166 then
+		u32 = u32 + 1;
+		local v185 = v11.AveragePoints(p74);
+		local v186 = v11.GetUnitRay(v185.x, v185.y, l__mouse__8.ViewSizeX, l__mouse__8.ViewSizeY, l__CurrentCamera__166);
+		local v187 = u33(l__Character__167);
+		if v187 then
+			v187:Activate();
+			LastFired = tick();
+		end;
+	end;
+end;
+local function u55()
+	local u56 = false;
+	local u57 = nil;
+	local u58 = {
+		Run = function(p75)
+			u56 = true;
+			local u59 = nil;
+			u59 = coroutine.create(function()
+				while u56 and u59 == u57 do
+					u58:Step();
+					wait();				
+				end;
+			end);
+			u57 = u59;
+			coroutine.resume(u59);
+		end, 
+		Stop = function(p76)
+			u56 = false;
+		end, 
+		Step = function(p77)
+			u22();
+		end
+	};
+	return u58;
+end;
+return function()
+	local v188 = {};
+	local function u60(p78)
+		if p78 then
+			p78:disconnect();
+		end;
+	end;
+	local u61 = nil;
+	local u62 = nil;
+	local u63 = nil;
+	local u64 = nil;
+	local u65 = nil;
+	local u66 = nil;
+	local u67 = nil;
+	local u68 = nil;
+	local u69 = nil;
+	CameraModule = v6();
+	function CameraModule.LookAtPreserveHeight(p79, p80)
+		local l__CurrentCamera__189 = workspace.CurrentCamera;
+		local l__p__190 = l__CurrentCamera__189.Focus.p;
+		local l__CoordinateFrame__191 = l__CurrentCamera__189.CoordinateFrame;
+		local v192 = (Vector3.new(p80.x, l__p__190.y, p80.z) - l__p__190).unit * Vector3.new(l__CoordinateFrame__191.lookVector.x, 0, l__CoordinateFrame__191.lookVector.z).magnitude + Vector3.new(0, l__CoordinateFrame__191.lookVector.y, 0);
+		local v193 = l__p__190 - v192.unit * (l__p__190 - l__CurrentCamera__189.CoordinateFrame.p).magnitude;
+		return CFrame.new(v193, v193 + v192);
+	end;
+	local function u70(p81, p82)
+		return math.atan2(p82.X * p81.Z - p82.Z * p81.X, p82.X * p81.X + p82.Z * p81.Z);
+	end;
+	local function u71(p83)
+		local v194 = false;
+		if p83 == p83 then
+			v194 = false;
+			if p83 ~= (1 / 0) then
+				v194 = p83 ~= (-1 / 0);
+			end;
+		end;
+		return v194;
+	end;
+	function CameraModule.TweenCameraLook(p84, p85, p86)
+		local v195, v196 = u4(CFrame.new(Vector3.new(), p84:GetCameraLook()), p85 - p85.p);
+		local v197 = v11.Clamp(0, math.pi, v195);
+		local v198 = 0.65 * (function(p87)
+			return 1 / (1 + 2.718281828459 ^ (-p87 * 1.5));
+		end)(v197 - math.pi / 4) + 0.15;
+		if p86 then
+			v198 = v197 / p86;
+		end;
+		local v199 = tick();
+		local function u72(p88, p89, p90, p91)
+			if p91 <= p88 then
+				return p89 + p90;
+			end;
+			return p90 * math.sin(p88 / p91 * (math.pi / 2)) + p89;
+		end;
+		local u73 = v199 + v198;
+		function p84.UpdateTweenFunction()
+			local v200 = tick() - v199;
+			local v201 = v11.Clamp(0, 1, u72(v200, 0, 1, v198));
+			local v202 = u70(v196(v201).lookVector, p84:GetCameraLook());
+			if u71(v202) and math.abs(v202) > 0.0001 then
+				p84.RotateInput = p84.RotateInput + Vector2.new(v202, 0);
+			end;
+			local v203 = true;
+			if not (u73 <= v200) then
+				v203 = v201 >= 1;
+			end;
+			return v203;
+		end;
+	end;
+	local u74 = {};
+	local u75 = 0;
+	local function u76()
+		u60(u61);
+		u60(u62);
+		u60(u63);
+		u60(u64);
+		u60(u65);
+		u60(u66);
+		u60(u67);
+		u60(u68);
+		u60(u69);
+		pcall(function()
+			l__RunService__3:UnbindFromRenderStep("ClickToMoveRenderUpdate");
+		end);
+	end;
+	local function u77(p92, p93)
+		if u74[p92] == nil and not p93 then
+			u75 = u75 + 1;
+		end;
+		u74[p92] = p93;
+	end;
+	local u78 = {
+		[Enum.KeyCode.W] = true, 
+		[Enum.KeyCode.A] = true, 
+		[Enum.KeyCode.S] = true, 
+		[Enum.KeyCode.D] = true, 
+		[Enum.KeyCode.Up] = true, 
+		[Enum.KeyCode.Down] = true
+	};
+	local u79 = tick();
+	local u80 = Vector2.new();
+	local u81 = tick();
+	local u82 = Vector2.new();
+	local function u83(p94, p95)
+		if u74[p94] == nil then
+			u74[p94] = p95;
+			if not p95 then
+				u75 = u75 + 1;
+			end;
+		end;
+	end;
+	local function u84(p96, p97)
+		if u74[p96] ~= nil and u74[p96] == false then
+			u75 = u75 - 1;
+		end;
+		u74[p96] = nil;
+	end;
+	local u85 = tick();
+	local u86 = false;
+	function v188.Stop(p98)
+		if u86 then
+			u76();
+			u31();
+			if u43 then
+				u43:Stop();
+				u43 = nil;
+			end;
+			if CameraModule then
+				CameraModule.UpdateTweenFunction = nil;
+				CameraModule:SetEnabled(false);
+			end;
+			if l__UserInputService__1.TouchEnabled then
+				local l__Character__204 = l__localPlayer__7.Character;
+				if l__Character__204 then
+					for v205, v206 in pairs(l__Character__204:GetChildren()) do
+						if v206:IsA("Tool") then
+							v206.ManualActivationOnly = false;
+						end;
+					end;
+				end;
+			end;
+			u86 = false;
+		end;
+	end;
+	local function u87(p99)
+		u76();
+		u62 = l__UserInputService__1.InputBegan:connect(function(p100, p101)
+			if p100.UserInputType == Enum.UserInputType.Touch then
+				u77(p100, p101);
+				local v207 = u50(p100.Position);
+				local v208 = u51(p100.Position);
+				if v208 or v207 then
+					for v209, v210 in pairs(u74) do
+						if v209 ~= p100 then
+							local v211 = u50(v209.Position);
+							local v212 = u51(v209.Position);
+							if v209.UserInputState ~= Enum.UserInputState.End then
+								if v207 and v212 then
+									if v10 then
+										v10:Fire(true);
+									end;
+									return;
+								end;
+								if v208 and v211 then
+									if v10 then
+										v10:Fire(true);
+									end;
+									return;
+								end;
+							end;
+						end;
+					end;
+				end;
+			end;
+			if p101 == false and p100.UserInputType == Enum.UserInputType.Keyboard and u78[p100.KeyCode] then
+				u31();
+			end;
+			if p100.UserInputType == Enum.UserInputType.MouseButton1 then
+				u79 = tick();
+				u80 = p100.Position;
+			end;
+			if p100.UserInputType == Enum.UserInputType.MouseButton2 then
+				u81 = tick();
+				u82 = p100.Position;
+			end;
+		end);
+		u63 = l__UserInputService__1.InputChanged:connect(function(p102, p103)
+			if p102.UserInputType == Enum.UserInputType.Touch then
+				u83(p102, p103);
+			end;
+		end);
+		u64 = l__UserInputService__1.InputEnded:connect(function(p104, p105)
+			if p104.UserInputType == Enum.UserInputType.Touch then
+				u84(p104, p105);
+			end;
+			if p104.UserInputType == Enum.UserInputType.MouseButton2 then
+				u85 = tick();
+				local l__Position__213 = p104.Position;
+				if u85 - u81 < 0.25 and (l__Position__213 - u82).magnitude < 5 then
+					u52({ l__Position__213 });
+				end;
+			end;
+		end);
+		u61 = l__UserInputService__1.TouchTap:connect(function(p106, p107)
+			if not p107 then
+				u52(p106);
+			end;
+		end);
+		if not l__UserInputService__1.TouchEnabled then
+			if u43 then
+				u43:Stop();
+				u43 = nil;
+			end;
+			u43 = u55();
+		end;
+		local function u88()
+			if CameraModule then
+				if CameraModule.UserPanningTheCamera then
+					CameraModule.UpdateTweenFunction = nil;
+				elseif CameraModule.UpdateTweenFunction and CameraModule.UpdateTweenFunction() then
+					CameraModule.UpdateTweenFunction = nil;
+				end;
+				CameraModule:Update();
+			end;
+		end;
+		if not pcall(function()
+			l__RunService__3:BindToRenderStep("ClickToMoveRenderUpdate", Enum.RenderPriority.Camera.Value - 1, u88);
+		end) then
+			if u68 then
+				u68:disconnect();
+			end;
+			u68 = l__RunService__3.RenderStepped:connect(u88);
+		end;
+		local function u89(p108)
+			if l__UserInputService__1.TouchEnabled and p108:IsA("Tool") then
+				p108.ManualActivationOnly = true;
+			end;
+			if p108:IsA("Humanoid") then
+				u60(u65);
+				u65 = p108.Died:connect(function()
+					l__Debris__4:AddItem(u28, 1);
+					if u43 then
+						u43:Stop();
+						u43 = nil;
+					end;
+				end);
+			end;
+		end;
+		u66 = p99.ChildAdded:connect(function(p109)
+			u89(p109);
+		end);
+		u69 = p99.ChildRemoved:connect(function(p110)
+			if l__UserInputService__1.TouchEnabled and p110:IsA("Tool") then
+				p110.ManualActivationOnly = false;
+			end;
+		end);
+		for v214, v215 in pairs(p99:GetChildren()) do
+			u89(v215);
+		end;
+	end;
+	function v188.Start(p111)
+		if not u86 then
+			if l__localPlayer__7.Character then
+				u87(l__localPlayer__7.Character);
+			end;
+			u67 = l__localPlayer__7.CharacterAdded:connect(u87);
+			if CameraModule then
+				CameraModule:SetEnabled(true);
+			end;
+			u86 = true;
+		end;
+	end;
+	return v188;
+end;

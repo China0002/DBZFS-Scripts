@@ -1,0 +1,42 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local u1 = require(script.Parent);
+local l__Players__2 = game:GetService("Players");
+return function()
+	local v1 = u1();
+	v1.PanEnabled = false;
+	local u3 = tick();
+	function v1.Update(p1)
+		local v2 = tick();
+		local l__CurrentCamera__3 = workspace.CurrentCamera;
+		if u3 == nil or v2 - u3 > 1 then
+			v1:ResetCameraLook();
+			p1.LastCameraTransform = nil;
+			p1.LastZoom = nil;
+		end;
+		local v4 = p1:GetSubjectPosition();
+		if v4 and l__Players__2.LocalPlayer and l__CurrentCamera__3 then
+			if p1.LastCameraTransform then
+				local v5 = p1:GetHumanoid();
+				if v5 and v5.Torso then
+					local v6 = v4 - p1.LastCameraTransform.p;
+					p1.cameraLook = v6.unit;
+					if p1.LastZoom and p1.LastZoom == p1:GetCameraZoom() then
+						p1:ZoomCamera(v6.magnitude);
+					end;
+				end;
+			end;
+			local v7 = p1:GetCameraZoom();
+			if v7 <= 0 then
+				v7 = 0.1;
+			end;
+			p1.RotateInput = Vector2.new();
+			l__CurrentCamera__3.Focus = CFrame.new(v4);
+			l__CurrentCamera__3.CoordinateFrame = CFrame.new(l__CurrentCamera__3.Focus.p - v7 * p1:RotateCamera(p1:GetCameraLook(), p1.RotateInput), l__CurrentCamera__3.Focus.p);
+			p1.LastCameraTransform = l__CurrentCamera__3.CoordinateFrame;
+			p1.LastZoom = v7;
+		end;
+		u3 = v2;
+	end;
+	return v1;
+end;

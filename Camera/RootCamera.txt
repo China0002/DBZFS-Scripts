@@ -1,0 +1,656 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local l__UserInputService__1 = game:GetService("UserInputService");
+local l__Players__2 = game:GetService("Players");
+local l__LocalPlayer__3 = game.Players.LocalPlayer;
+local v4 = require(script.Parent:WaitForChild("ShiftLockController"));
+local l__GameSettings__5 = UserSettings().GameSettings;
+local l__LocalPlayer__6 = game.Players.LocalPlayer;
+local u1 = {};
+local v7 = math.rad(-80);
+local v8 = math.rad(80);
+local v9 = Vector2.new(math.pi * 2.25, math.pi * 2);
+local v10 = Vector2.new(math.pi * 4, math.pi * 1.9);
+local v11 = Vector3.new(0, 5, 0);
+local v12 = Vector3.new(0, 1.5, 0);
+local u2 = false;
+pcall(function()
+	u2 = Instance.new("Part"):GetRenderCFrame() ~= nil;
+end);
+local function u3(p1)
+	local v13 = p1 and p1.Character;
+	if v13 then
+		local v14 = u1[p1];
+		if v14 and v14.Parent == v13 then
+			return v14;
+		end;
+		u1[p1] = nil;
+		for v15, v16 in pairs(v13:GetChildren()) do
+			if v16:IsA("Humanoid") then
+				u1[p1] = v16;
+				return v16;
+			end;
+		end;
+	end;
+end;
+local function u4(p2)
+	return u2 and p2:GetRenderCFrame() or p2.CFrame;
+end;
+local function u5(p3, p4, p5)
+	if not (p3 <= p4) then
+		return p5;
+	end;
+	return math.min(p4, math.max(p3, p5));
+end;
+local l__TouchEnabled__6 = l__UserInputService__1.TouchEnabled;
+local function u7(p6, p7)
+	return math.atan2(p7.X * p6.Z - p7.Z * p6.X, p7.X * p6.X + p7.Z * p6.Z);
+end;
+local function u8(p8)
+	local v17 = false;
+	if p8 == p8 then
+		v17 = false;
+		if p8 ~= (1 / 0) then
+			v17 = p8 ~= (-1 / 0);
+		end;
+	end;
+	return v17;
+end;
+local u9 = true;
+return function()
+	local u10 = {
+		ShiftLock = false, 
+		Enabled = false, 
+		RotateInput = Vector2.new(), 
+		GetShiftLock = function(p9)
+			return v4:IsShiftLocked();
+		end, 
+		GetHumanoid = function(p10)
+			return u3(l__Players__2.LocalPlayer);
+		end, 
+		GetHumanoidRootPart = function(p11)
+			local v18 = u10:GetHumanoid();
+			return v18 and v18.Torso;
+		end, 
+		GetRenderCFrame = function(p12, p13)
+			u4(p13);
+		end, 
+		GetSubjectPosition = function(p14)
+			local v19 = nil;
+			local l__CurrentCamera__20 = workspace.CurrentCamera;
+			local v21 = l__CurrentCamera__20 and l__CurrentCamera__20.CameraSubject;
+			if v21 then
+				if v21:IsA("VehicleSeat") then
+					local v22 = u4(v21);
+					return v22.p + v22:vectorToWorldSpace(v11);
+				end;
+				if v21:IsA("SkateboardPlatform") then
+					return u4(v21).p + v11;
+				end;
+				if v21:IsA("BasePart") then
+					return u4(v21).p;
+				end;
+				if v21:IsA("Model") then
+					return v21:GetModelCFrame().p;
+				end;
+				if v21:IsA("Humanoid") then
+					local l__Torso__23 = v21.Torso;
+					if l__Torso__23 and l__Torso__23:IsA("BasePart") then
+						local v24 = u4(l__Torso__23);
+						v19 = v24.p + v24:vectorToWorldSpace(v12 + v21.CameraOffset);
+					end;
+				end;
+			end;
+			return v19;
+		end, 
+		ResetCameraLook = function(p15)
+
+		end, 
+		GetCameraLook = function(p16)
+			return workspace.CurrentCamera and workspace.CurrentCamera.CoordinateFrame.lookVector or Vector3.new(0, 0, 1);
+		end, 
+		GetCameraZoom = function(p17)
+			if u10.currentZoom == nil then
+				local l__LocalPlayer__25 = l__Players__2.LocalPlayer;
+				u10.currentZoom = l__LocalPlayer__25 and u5(l__LocalPlayer__25.CameraMinZoomDistance, l__LocalPlayer__25.CameraMaxZoomDistance, 10) or 10;
+			end;
+			return u10.currentZoom;
+		end, 
+		GetCameraActualZoom = function(p18)
+			local l__CurrentCamera__26 = workspace.CurrentCamera;
+			if not l__CurrentCamera__26 then
+				return;
+			end;
+			return (l__CurrentCamera__26.CoordinateFrame.p - l__CurrentCamera__26.Focus.p).magnitude;
+		end, 
+		ViewSizeX = function(p19)
+			local v27 = 1024;
+			local l__LocalPlayer__28 = l__Players__2.LocalPlayer;
+			local v29 = l__LocalPlayer__28 and l__LocalPlayer__28:GetMouse();
+			if v29 then
+				v27 = v29.ViewSizeX;
+			end;
+			return v27;
+		end, 
+		ViewSizeY = function(p20)
+			local v30 = 768;
+			local l__LocalPlayer__31 = l__Players__2.LocalPlayer;
+			local v32 = l__LocalPlayer__31 and l__LocalPlayer__31:GetMouse();
+			if v32 then
+				v30 = v32.ViewSizeY;
+			end;
+			return v30;
+		end, 
+		ScreenTranslationToAngle = function(p21, p22)
+			return Vector2.new(p22.x / u10:ViewSizeX(), p22.y / u10:ViewSizeY());
+		end, 
+		MouseTranslationToAngle = function(p23, p24)
+			return Vector2.new(p24.x / 1920, p24.y / 1200);
+		end, 
+		RotateCamera = function(p25, p26, p27)
+			local v33 = math.asin(p26.y);
+			local v34 = u5(-v8 + v33, -v7 + v33, p27.y);
+			return (CFrame.Angles(0, -p27.x, 0) * CFrame.new(Vector3.new(), p26) * CFrame.Angles(-v34, 0, 0)).lookVector, Vector2.new(p27.x, v34);
+		end
+	};
+	local u11 = false;
+	function u10.IsInFirstPerson(p28)
+		return u11;
+	end;
+	local u12 = false;
+	function u10.UpdateMouseBehavior(p29)
+		if u11 or p29:GetShiftLock() then
+			if l__UserInputService__1.MouseBehavior ~= Enum.MouseBehavior.LockCenter then
+				pcall(function()
+					l__GameSettings__5.RotationType = Enum.RotationType.CameraRelative;
+				end);
+				l__UserInputService__1.MouseBehavior = Enum.MouseBehavior.LockCenter;
+				return;
+			else
+				return;
+			end;
+		else
+			pcall(function()
+				l__GameSettings__5.RotationType = Enum.RotationType.MovementRelative;
+			end);
+			if not u12 then
+				l__UserInputService__1.MouseBehavior = Enum.MouseBehavior.Default;
+				return;
+			end;
+		end;
+		if l__UserInputService__1:GetFocusedTextBox() == nil then
+			l__UserInputService__1.MouseBehavior = Enum.MouseBehavior.LockCenter;
+			return;
+		end;
+		l__UserInputService__1.MouseBehavior = Enum.MouseBehavior.Default;
+	end;
+	function u10.ZoomCamera(p30, p31)
+		local l__LocalPlayer__35 = l__Players__2.LocalPlayer;
+		if l__LocalPlayer__35 then
+			if l__LocalPlayer__35.CameraMode == Enum.CameraMode.LockFirstPerson then
+				u10.currentZoom = 0;
+			else
+				u10.currentZoom = u5(l__LocalPlayer__35.CameraMinZoomDistance, l__LocalPlayer__35.CameraMaxZoomDistance, p31);
+			end;
+		end;
+		u11 = p30:GetCameraZoom() < 2;
+		v4:SetIsInFirstPerson(u11);
+		p30:UpdateMouseBehavior();
+		return p30:GetCameraZoom();
+	end;
+	local function u13(p32, p33, p34)
+		if p33 < 0 then
+			local v36 = -1;
+		else
+			v36 = 1;
+		end;
+		local function v37(p35, p36)
+			return v36 * math.max(1, p35 / 3.3 + 0.5);
+		end;
+		local v38 = v37(p32, p33);
+		local v39 = p33 + v38 * (p34 / 2);
+		local v40 = v37(p32 + p33 * (p34 / 2), v39);
+		local v41 = p33 + v40 * (p34 / 2);
+		local v42 = v37(p32 + v39 * (p34 / 2), v41);
+		local v43 = p33 + v42 * p34;
+		return p32 + (p33 + 2 * v39 + 2 * v41 + v43) * (p34 / 6), p33 + (v38 + 2 * v40 + 2 * v42 + v37(p32 + v41 * p34, v43)) * (p34 / 6);
+	end;
+	function u10.ZoomCameraBy(p37, p38)
+		local v44 = u10:GetCameraActualZoom();
+		if v44 then
+			p37:ZoomCamera((u13(v44, p38, 1)));
+		end;
+		return p37:GetCameraZoom();
+	end;
+	function u10.ZoomCameraFixedBy(p39, p40)
+		return p39:ZoomCamera(p39:GetCameraZoom() + p40);
+	end;
+	function u10.Update(p41)
+
+	end;
+	u10.ZoomEnabled = true;
+	u10.PanEnabled = true;
+	u10.KeyPanEnabled = true;
+	local u14 = {};
+	local u15 = 0;
+	local u16 = nil;
+	local u17 = nil;
+	local u18 = nil;
+	local u19 = nil;
+	local u20 = nil;
+	local function u21(p42)
+		return math.floor(p42 + 0.5);
+	end;
+	local function u22(p43, p44, p45)
+		if p43 == Vector3.new(0, 0, 0) then
+			return 0;
+		end;
+		p43 = p43.unit;
+		return u21((math.atan2(p43.z, p43.x) + p44) / p45) * p45 - math.atan2(p43.z, p43.x);
+	end;
+	local u23 = math.pi / 4;
+	local function u24(p46)
+		return p46 / 2 + 0.5;
+	end;
+	local function u25(p47)
+		p47 = u5(-1, 1, p47);
+		if p47 >= 0 then
+			return 0.35 * p47 / (0.35 - p47 + 1);
+		end;
+		return -(0.8 * -p47 / (0.8 + p47 + 1));
+	end;
+	local function u26(p48)
+		return 1.1 * (2 * math.abs(p48) - 1) - 0.1;
+	end;
+	local function u27(p49)
+		local function v45(p50)
+			local v46 = 1;
+			if p50 < 0 then
+				v46 = -1;
+			end;
+			return u5(-1, 1, u24(u25(u26(math.abs(p50)))) * v46);
+		end;
+		return Vector2.new(v45(p49.x), v45(p49.y));
+	end;
+	local u28 = nil;
+	local u29 = Vector2.new(0, 0);
+	local u30 = 0;
+	local u31 = nil;
+	function u10.UpdateGamepad(p51)
+		local l__GamepadPanningCamera__47 = u10.GamepadPanningCamera;
+		if not l__GamepadPanningCamera__47 then
+			return Vector2.new(0, 0);
+		end;
+		local v48 = u27(l__GamepadPanningCamera__47);
+		local v49 = tick();
+		if v48.X ~= 0 or v48.Y ~= 0 then
+			u10.userPanningTheCamera = true;
+		elseif v48 == Vector2.new(0, 0) then
+			u28 = nil;
+			if u29 == Vector2.new(0, 0) then
+				u30 = 0;
+			end;
+		end;
+		local v50 = 0;
+		if u28 then
+			local v51 = (v49 - u28) * 10;
+			u30 = u30 + 0.1 * (v51 * v51 / 0.7);
+			if u30 > 0.1 then
+				u30 = 0.1;
+			end;
+			if u31 then
+				local l__magnitude__52 = ((v48 - u29) / (v49 - u28) - u31).magnitude;
+				if l__magnitude__52 > 12 then
+					u30 = u30 * (20 / l__magnitude__52);
+					if u30 > 0.1 then
+						u30 = 0.1;
+					end;
+				end;
+			end;
+			v50 = 1 * u30;
+			u31 = (v48 - u29) / (v49 - u28);
+		end;
+		u29 = v48;
+		u28 = v49;
+		return Vector2.new(v48.X * v50, v48.Y * v50 * 0.65);
+	end;
+	local u32 = nil;
+	local u33 = nil;
+	local u34 = nil;
+	local u35 = nil;
+	function u10.DisconnectInputEvents(p52)
+		if u32 then
+			u32:disconnect();
+			u32 = nil;
+		end;
+		if u33 then
+			u33:disconnect();
+			u33 = nil;
+		end;
+		if u34 then
+			u34:disconnect();
+			u34 = nil;
+		end;
+		if u35 then
+			u35:disconnect();
+			u35 = nil;
+		end;
+		u10.TurningLeft = false;
+		u10.TurningRight = false;
+		u10.LastCameraTransform = nil;
+		p52.LastSubjectCFrame = nil;
+		u10.UserPanningTheCamera = false;
+		u10.RotateInput = Vector2.new();
+		u10.GamepadPanningCamera = Vector2.new(0, 0);
+		u17 = nil;
+		u18 = nil;
+		u16 = nil;
+		u12 = false;
+		u14 = {};
+		u15 = 0;
+		u19 = nil;
+		u20 = nil;
+		if l__UserInputService__1.MouseBehavior ~= Enum.MouseBehavior.LockCenter then
+			l__UserInputService__1.MouseBehavior = Enum.MouseBehavior.Default;
+		end;
+	end;
+	local function u36(p53, p54)
+		u14[p53] = p54;
+		if not p54 then
+			u15 = u15 + 1;
+		end;
+	end;
+	local function u37(p55, p56)
+		if p56 then
+			return;
+		end;
+		u12 = true;
+		u10:UpdateMouseBehavior();
+		u16 = u10:GetCameraLook();
+		u17 = p55.Position;
+		u18 = u17;
+		u10.UserPanningTheCamera = true;
+	end;
+	local function u38(p57, p58)
+		if p58 then
+			return;
+		end;
+		if u10.ZoomEnabled then
+			if p57.KeyCode == Enum.KeyCode.I then
+				u10:ZoomCameraBy(-5);
+			elseif p57.KeyCode == Enum.KeyCode.O then
+				u10:ZoomCameraBy(5);
+			end;
+		end;
+		if u16 == nil and u10.KeyPanEnabled then
+			if p57.KeyCode == Enum.KeyCode.Left then
+				u10.TurningLeft = true;
+				return;
+			end;
+			if p57.KeyCode == Enum.KeyCode.Right then
+				u10.TurningRight = true;
+				return;
+			end;
+			if p57.KeyCode == Enum.KeyCode.Comma then
+				local v53 = u22(u10:GetCameraLook() * Vector3.new(1, 0, 1), -u23 * 0.75, u23);
+				if v53 ~= 0 then
+					u10.RotateInput = u10.RotateInput + Vector2.new(v53, 0);
+					u10.LastUserPanCamera = tick();
+					u10.LastCameraTransform = nil;
+					return;
+				end;
+			elseif p57.KeyCode == Enum.KeyCode.Period then
+				local v54 = u22(u10:GetCameraLook() * Vector3.new(1, 0, 1), u23 * 0.75, u23);
+				if v54 ~= 0 then
+					u10.RotateInput = u10.RotateInput + Vector2.new(v54, 0);
+					u10.LastUserPanCamera = tick();
+					u10.LastCameraTransform = nil;
+					return;
+				end;
+			else
+				if p57.KeyCode == Enum.KeyCode.PageUp then
+					u10.RotateInput = u10.RotateInput + Vector2.new(0, math.rad(15));
+					u10.LastCameraTransform = nil;
+					return;
+				end;
+				if p57.KeyCode == Enum.KeyCode.PageDown then
+					u10.RotateInput = u10.RotateInput + Vector2.new(0, math.rad(-15));
+					u10.LastCameraTransform = nil;
+				end;
+			end;
+		end;
+	end;
+	local function u39(p59, p60)
+		if u14[p59] == nil then
+			u14[p59] = p60;
+			if not p60 then
+				u15 = u15 + 1;
+			end;
+		end;
+		if u15 == 1 then
+			if u14[p59] == false then
+				u16 = u16 or u10:GetCameraLook();
+				u17 = u17 or p59.Position;
+				u18 = u18 or u17;
+				u10.UserPanningTheCamera = true;
+				if u10.PanEnabled then
+					u10.RotateInput = u10.RotateInput + u10:ScreenTranslationToAngle(p59.Position - u18) * v9;
+				end;
+				u18 = p59.Position;
+			end;
+		else
+			u16 = nil;
+			u17 = nil;
+			u18 = nil;
+			u10.UserPanningTheCamera = false;
+		end;
+		if u15 == 2 then
+			local v55 = {};
+			for v56, v57 in pairs(u14) do
+				if not v57 then
+					table.insert(v55, v56);
+				end;
+			end;
+			if #v55 == 2 then
+				local l__magnitude__58 = (v55[1].Position - v55[2].Position).magnitude;
+				if not u19 or not u20 then
+					u19 = l__magnitude__58;
+					u20 = u10:GetCameraActualZoom();
+					return;
+				end;
+				local v59 = u5(0.1, 10, l__magnitude__58 / math.max(0.01, u19));
+				if u10.ZoomEnabled then
+					u10:ZoomCamera(u20 / v59);
+					return;
+				end;
+			end;
+		else
+			u19 = nil;
+			u20 = nil;
+		end;
+	end;
+	local function u40(p61, p62)
+		if not u17 or not u18 or not u16 then
+			if (u10:IsInFirstPerson() or u10:GetShiftLock()) and u10.PanEnabled then
+				u10.RotateInput = u10.RotateInput + u10:MouseTranslationToAngle(p61.Delta) * v10;
+			end;
+			return;
+		end;
+		if u10.PanEnabled then
+			u10.RotateInput = u10.RotateInput + u10:MouseTranslationToAngle(p61.Delta) * v10;
+		end;
+		if l__UserInputService__1:GetFocusedTextBox() == nil then
+			l__UserInputService__1.MouseBehavior = Enum.MouseBehavior.LockCenter;
+		else
+			l__UserInputService__1.MouseBehavior = Enum.MouseBehavior.Default;
+		end;
+		u18 = u18 + p61.Delta;
+	end;
+	local function u41(p63, p64)
+		if not p64 and u10.ZoomEnabled then
+			u10:ZoomCameraBy(u5(-1, 1, -p63.Position.Z) * 1.4);
+		end;
+	end;
+	local function u42(p65, p66)
+		if u14[p65] == false then
+			if u15 == 1 then
+				u16 = nil;
+				u17 = nil;
+				u18 = nil;
+				u10.UserPanningTheCamera = false;
+			elseif u15 == 2 then
+				u19 = nil;
+				u20 = nil;
+			end;
+		end;
+		if u14[p65] ~= nil and u14[p65] == false then
+			u15 = u15 - 1;
+		end;
+		u14[p65] = nil;
+	end;
+	local function u43(p67, p68)
+		u12 = false;
+		u10:UpdateMouseBehavior();
+		u16 = nil;
+		u17 = nil;
+		u18 = nil;
+		u10.UserPanningTheCamera = false;
+	end;
+	local function u44(p69, p70)
+		if p69.KeyCode == Enum.KeyCode.Left then
+			u10.TurningLeft = false;
+			return;
+		end;
+		if p69.KeyCode == Enum.KeyCode.Right then
+			u10.TurningRight = false;
+		end;
+	end;
+	function u10.ConnectInputEvents(p71)
+		u32 = l__UserInputService__1.InputBegan:connect(function(p72, p73)
+			if p72.UserInputType == Enum.UserInputType.Touch and l__TouchEnabled__6 then
+				u36(p72, p73);
+			elseif p72.UserInputType == Enum.UserInputType.MouseButton2 and not l__TouchEnabled__6 then
+				u37(p72, p73);
+			end;
+			if p72.UserInputType == Enum.UserInputType.Keyboard then
+				u38(p72, p73);
+			end;
+		end);
+		u33 = l__UserInputService__1.InputChanged:connect(function(p74, p75)
+			if p74.UserInputType == Enum.UserInputType.Touch and l__TouchEnabled__6 then
+				u39(p74, p75);
+				return;
+			end;
+			if p74.UserInputType == Enum.UserInputType.MouseMovement and not l__TouchEnabled__6 then
+				u37(p74, p75);
+				u40(p74, p75);
+				return;
+			end;
+			if p74.UserInputType == Enum.UserInputType.MouseMovement and not l__TouchEnabled__6 then
+				u40(p74, p75);
+				return;
+			end;
+			if p74.UserInputType == Enum.UserInputType.MouseWheel and not l__TouchEnabled__6 then
+				u41(p74, p75);
+			end;
+		end);
+		u34 = l__UserInputService__1.InputEnded:connect(function(p76, p77)
+			if p76.UserInputType == Enum.UserInputType.Touch and l__TouchEnabled__6 then
+				u42(p76, p77);
+			elseif p76.UserInputType == Enum.UserInputType.MouseButton2 and not l__TouchEnabled__6 then
+				u43(p76, p77);
+			end;
+			if p76.UserInputType == Enum.UserInputType.Keyboard then
+				u44(p76, p77);
+			end;
+		end);
+		u35 = v4.OnShiftLockToggled.Event:connect(function()
+			u10:UpdateMouseBehavior();
+		end);
+		u10.RotateInput = Vector2.new();
+		game.ContextActionService:BindAction("RootCamGamepadPan", function(p78, p79, p80)
+			if p80.UserInputType == Enum.UserInputType.Gamepad1 and p80.KeyCode == Enum.KeyCode.Thumbstick2 then
+				if p79 == Enum.UserInputState.Cancel then
+					u10.GamepadPanningCamera = Vector2.new(0, 0);
+					return;
+				end;
+				if not (Vector2.new(p80.Position.X, -p80.Position.Y).magnitude > 0.2) then
+					u10.GamepadPanningCamera = Vector2.new(0, 0);
+					return;
+				end;
+			else
+				return;
+			end;
+			u10.GamepadPanningCamera = Vector2.new(p80.Position.X, -p80.Position.Y);
+		end, false, Enum.KeyCode.Thumbstick2);
+		game.ContextActionService:BindAction("RootCamGamepadZoom", function(p81, p82, p83)
+			if p83.UserInputType == Enum.UserInputType.Gamepad1 and p83.KeyCode == Enum.KeyCode.ButtonR3 and p82 == Enum.UserInputState.Begin and u10.currentZoom > 0.5 then
+				return;
+			end;
+		end, false, Enum.KeyCode.ButtonR3);
+		p71:UpdateMouseBehavior();
+	end;
+	function u10.SetEnabled(p84, p85)
+		if p85 ~= p84.Enabled then
+			p84.Enabled = p85;
+			if not p84.Enabled then
+				p84:DisconnectInputEvents();
+				return;
+			end;
+		else
+			return;
+		end;
+		p84:ConnectInputEvents();
+	end;
+	local function v60(p86)
+		p86.Changed:connect(function(p87)
+			if u10.Enabled and (p87 == "CameraMode" or p87 == "CameraMaxZoomDistance" or p87 == "CameraMinZoomDistance") then
+				u10:ZoomCameraFixedBy(0);
+			end;
+		end);
+		local function u45(p88)
+			u10:ZoomCamera(12.5);
+			local v61 = u3(p86);
+			while tick() - tick() < 0.3 and (v61 == nil or v61.Torso == nil) do
+				wait();
+				v61 = u3(p86);			
+			end;
+			wait();
+			(function()
+				if v61 and v61.Torso and p86.Character == p88 then
+					local l__unit__62 = (v61.Torso.CFrame.lookVector - Vector3.new(0, 0.23, 0)).unit;
+					local v63 = u7(l__unit__62, u10:GetCameraLook());
+					local v64 = math.asin(u10:GetCameraLook().y) - math.asin(l__unit__62.y);
+					if not u8(v63) then
+						v63 = 0;
+					end;
+					if not u8(v64) then
+						v64 = 0;
+					end;
+					u10.RotateInput = Vector2.new(v63, v64);
+					u10.LastCameraTransform = nil;
+				end;
+			end)();
+		end;
+		p86.CharacterAdded:connect(function(p89)
+			if u10.Enabled or u9 then
+				u45(p89);
+				u9 = false;
+			end;
+		end);
+		if p86.Character then
+			spawn(function()
+				u45(p86.Character);
+			end);
+		end;
+	end;
+	if l__Players__2.LocalPlayer then
+		v60(l__Players__2.LocalPlayer);
+	end;
+	l__Players__2.ChildAdded:connect(function(p90)
+		if p90 and l__Players__2.LocalPlayer == p90 then
+			v60(l__Players__2.LocalPlayer);
+		end;
+	end);
+	return u10;
+end;

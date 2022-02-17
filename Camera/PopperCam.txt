@@ -1,0 +1,127 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local v1 = {};
+local l__Players__2 = game:GetService("Players");
+local function u1(p1, p2, p3)
+	local v3 = p2 - p1;
+	return workspace:FindPartOnRayWithIgnoreList(Ray.new(p1, v3.Unit * math.min(v3.Magnitude, 999)), p3 or {}, false, true);
+end;
+local u2 = nil;
+local u3 = {};
+local u4 = false;
+local u5 = { "Humanoid", "VehicleSeat", "SkateboardPlatform" };
+local u6 = {};
+local function u7(p4, p5)
+	u6[p4] = p5;
+end;
+local function v4(p6)
+	if p6:IsA("Player") then
+		p6.CharacterAdded:connect(function(p7)
+			u7(p6, p7);
+		end);
+		if p6.Character then
+			u7(p6, p6.Character);
+		end;
+	end;
+end;
+local u8 = nil;
+local function u9(p8)
+	if p8 == "CameraSubject" then
+		u3 = {};
+		local l__CameraSubject__5 = u2.CameraSubject;
+		if l__CameraSubject__5 then
+			u4 = false;
+			for v6, v7 in pairs(u5) do
+				if l__CameraSubject__5:IsA(v7) then
+					u4 = true;
+					break;
+				end;
+			end;
+			if l__CameraSubject__5:IsA("VehicleSeat") then
+				u3 = l__CameraSubject__5:GetConnectedParts(true);
+			end;
+		end;
+	end;
+end;
+local function v8(p9)
+	if p9 == "CurrentCamera" then
+		local l__CurrentCamera__9 = workspace.CurrentCamera;
+		if l__CurrentCamera__9 then
+			u2 = l__CurrentCamera__9;
+			if u8 then
+				u8:disconnect();
+			end;
+			u8 = u2.Changed:connect(u9);
+			u9("CameraSubject");
+		end;
+	end;
+end;
+local u10 = { Vector2.new(1, 1) / 2, Vector2.new(0, 0), Vector2.new(1, 0), Vector2.new(1, 1), Vector2.new(0, 1) };
+local function u11(p10, p11, p12)
+	local l__CoordinateFrame__10 = u2.CoordinateFrame;
+	local l__Unit__11 = l__CoordinateFrame__10:vectorToWorldSpace((Vector3.new(p10.x - p11.x / 2, p11.y / 2 - p10.y, -(p11.y / (2 * math.tan(math.rad(u2.FieldOfView) / 2)))))).Unit;
+	return l__CoordinateFrame__10.p + l__Unit__11 * (p12 / math.sin(math.pi / 2 - math.acos(math.min(1, l__Unit__11:Dot(l__CoordinateFrame__10.lookVector)))));
+end;
+local function u12(p13, p14, p15)
+	local v12 = nil;
+	local v13 = nil;
+	while true do
+		v12, v13 = u1(p13, p14, p15);
+		if not v12 then
+			break;
+		end;
+		if not (v12.Transparency > 0.95) and v12.CanCollide ~= false then
+			break;
+		end;
+		table.insert(p15, v12);	
+	end;
+	return v12, v13;
+end;
+local u13 = 0;
+local u14 = 0;
+function v1.Update(p16)
+	if u4 then
+		local l__p__14 = u2.Focus.p;
+		local l__CoordinateFrame__15 = u2.CoordinateFrame;
+		local v16 = l__CoordinateFrame__15.p + l__CoordinateFrame__15.lookVector * 0.5;
+		local l__ViewportSize__17 = u2.ViewportSize;
+		local v18 = {};
+		for v19, v20 in pairs(u6) do
+			table.insert(v18, v20);
+		end;
+		for v21, v22 in pairs(u3) do
+			table.insert(v18, v22);
+		end;
+		local v23 = 0;
+		for v24, v25 in pairs(u10) do
+			local v26 = u11(l__ViewportSize__17 * v25, l__ViewportSize__17, 0.5);
+			local v27, v28 = u12(l__p__14 + (v26 - v16), v26, v18);
+			local l__Magnitude__29 = (v28 - v26).Magnitude;
+			if v23 < l__Magnitude__29 then
+				v23 = l__Magnitude__29;
+			end;
+		end;
+		local l__Magnitude__30 = (l__CoordinateFrame__15.p - l__p__14).Magnitude;
+		if math.abs(l__Magnitude__30 - u13) > 0.001 then
+			u14 = 0;
+		end;
+		local v31 = math.max(v23, u14);
+		if v31 > 0 then
+			u2.CoordinateFrame = l__CoordinateFrame__15 + l__CoordinateFrame__15.lookVector * v31;
+			u14 = math.max(0, v31 - 0.3);
+		end;
+		u13 = l__Magnitude__30;
+	end;
+end;
+workspace.Changed:connect(v8);
+v8("CurrentCamera");
+l__Players__2.ChildRemoved:connect(function(p17)
+	if p17:IsA("Player") then
+		u6[p17] = nil;
+	end;
+end);
+l__Players__2.ChildAdded:connect(v4);
+for v32, v33 in pairs(l__Players__2:GetPlayers()) do
+	v4(v33);
+end;
+return v1;

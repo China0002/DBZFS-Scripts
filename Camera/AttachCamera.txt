@@ -1,0 +1,52 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local v1 = Vector3.new(1, 0, 1);
+local u1 = require(script.Parent);
+local l__Players__2 = game:GetService("Players");
+local function u3(p1, p2)
+	return math.atan2(p2.X * p1.Z - p2.Z * p1.X, p2.X * p1.X + p2.Z * p1.Z);
+end;
+local function u4(p3)
+	local v2 = false;
+	if p3 == p3 then
+		v2 = false;
+		if p3 ~= (1 / 0) then
+			v2 = p3 ~= (-1 / 0);
+		end;
+	end;
+	return v2;
+end;
+return function()
+	local u5 = tick();
+	local u6 = u1();
+	function u6.Update(p4)
+		local v3 = tick();
+		local l__CurrentCamera__4 = workspace.CurrentCamera;
+		if u5 == nil or v3 - u5 > 1 then
+			u6:ResetCameraLook();
+			p4.LastCameraTransform = nil;
+		end;
+		local v5 = p4:GetSubjectPosition();
+		if v5 and l__Players__2.LocalPlayer and l__CurrentCamera__4 then
+			local v6 = p4:GetCameraZoom();
+			if v6 <= 0 then
+				v6 = 0.1;
+			end;
+			if p4.LastCameraTransform then
+				local v7 = p4:GetHumanoid();
+				if u5 and v7 and v7.Torso then
+					local v8 = u3(v7.Torso.CFrame.lookVector, p4:GetCameraLook());
+					if u4(v8) and math.abs(v8) > 0.0001 then
+						p4.RotateInput = p4.RotateInput + Vector2.new(v8, 0);
+					end;
+				end;
+			end;
+			p4.RotateInput = Vector2.new();
+			l__CurrentCamera__4.Focus = CFrame.new(v5);
+			l__CurrentCamera__4.CoordinateFrame = CFrame.new(l__CurrentCamera__4.Focus.p - v6 * p4:RotateCamera(p4:GetCameraLook(), p4.RotateInput), l__CurrentCamera__4.Focus.p);
+			p4.LastCameraTransform = l__CurrentCamera__4.CoordinateFrame;
+		end;
+		u5 = v3;
+	end;
+	return u6;
+end;

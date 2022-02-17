@@ -1,0 +1,183 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local l__ContextActionService__1 = game:GetService("ContextActionService");
+local l__Players__2 = game:GetService("Players");
+local l__StarterPlayer__3 = game:GetService("StarterPlayer");
+local l__UserInputService__4 = game:GetService("UserInputService");
+local v5 = {};
+while not l__Players__2.LocalPlayer do
+	wait();
+end;
+local l__LocalPlayer__6 = l__Players__2.LocalPlayer;
+local v7 = false;
+v5.OnShiftLockToggled = Instance.new("BindableEvent");
+local l__GameSettings__1 = UserSettings().GameSettings;
+local function v8()
+	local v9 = l__LocalPlayer__6.DevEnableMouseLock;
+	if v9 then
+		v9 = false;
+		if l__GameSettings__1.ControlMode == Enum.ControlMode.MouseLockSwitch then
+			v9 = false;
+			if l__LocalPlayer__6.DevComputerMovementMode ~= Enum.DevComputerMovementMode.ClickToMove then
+				v9 = false;
+				if l__GameSettings__1.ComputerMovementMode ~= Enum.ComputerMovementMode.ClickToMove then
+					v9 = l__LocalPlayer__6.DevComputerMovementMode ~= Enum.DevComputerMovementMode.Scriptable;
+				end;
+			end;
+		end;
+	end;
+	return v9;
+end;
+if not l__UserInputService__4.TouchEnabled then
+	v7 = v8();
+end;
+local u2 = false;
+local u3 = nil;
+local l__mouse__4 = l__LocalPlayer__6:GetMouse();
+local u5 = nil;
+local u6 = v7;
+local function u7()
+	u2 = not u2;
+	if u2 then
+		u3.Image = "rbxasset://textures/ui/mouseLock_on.png";
+		l__mouse__4.Icon = "rbxasset://textures/MouseLockedCursor.png";
+	else
+		u3.Image = "rbxasset://textures/ui/mouseLock_off.png";
+		l__mouse__4.Icon = "";
+	end;
+	v5.OnShiftLockToggled:Fire();
+end;
+local l__PlayerGui__8 = l__LocalPlayer__6:WaitForChild("PlayerGui");
+function v5.IsShiftLocked(p1)
+	return u6 and u2;
+end;
+local u9 = false;
+function v5.SetIsInFirstPerson(p2, p3)
+	u9 = p3;
+end;
+local u10 = nil;
+local u11 = false;
+local function u12(p4, p5, p6)
+	if u6 then
+		u7();
+	end;
+end;
+local function u13(p7, p8)
+	if p8 then
+		return;
+	end;
+	if p7.UserInputType == Enum.UserInputType.Keyboard and (p7.KeyCode == Enum.KeyCode.LeftShift or p7.KeyCode == Enum.KeyCode.RightShift) then
+		u12();
+	end;
+end;
+local function u14()
+	u6 = v8();
+	if u6 then
+		if u3 then
+			u3.Visible = true;
+		end;
+		if u2 then
+			l__mouse__4.Icon = "rbxasset://textures/MouseLockedCursor.png";
+			v5.OnShiftLockToggled:Fire();
+		end;
+		if not u11 then
+			u10 = l__UserInputService__4.InputBegan:connect(u13);
+			u11 = true;
+		end;
+	end;
+end;
+local function u15()
+	if u3 then
+		u3.Visible = false;
+	end;
+	u6 = false;
+	l__mouse__4.Icon = "";
+	if u10 then
+		u10:disconnect();
+		u10 = nil;
+	end;
+	u11 = false;
+	v5.OnShiftLockToggled:Fire();
+end;
+l__GameSettings__1.Changed:connect(function(p9)
+	if p9 == "ControlMode" then
+		if l__GameSettings__1.ControlMode == Enum.ControlMode.MouseLockSwitch then
+			u14();
+			return;
+		else
+			u15();
+			return;
+		end;
+	end;
+	if p9 == "ComputerMovementMode" then
+		if l__GameSettings__1.ComputerMovementMode ~= Enum.ComputerMovementMode.ClickToMove then
+			u14();
+			return;
+		end;
+	else
+		return;
+	end;
+	u15();
+end);
+l__LocalPlayer__6.Changed:connect(function(p10)
+	if p10 == "DevEnableMouseLock" then
+		if l__LocalPlayer__6.DevEnableMouseLock then
+			u14();
+			return;
+		else
+			u15();
+			return;
+		end;
+	end;
+	if p10 == "DevComputerMovementMode" then
+		if l__LocalPlayer__6.DevComputerMovementMode ~= Enum.DevComputerMovementMode.ClickToMove and l__LocalPlayer__6.DevComputerMovementMode ~= Enum.DevComputerMovementMode.Scriptable then
+			u14();
+			return;
+		end;
+	else
+		return;
+	end;
+	u15();
+end);
+local function u16()
+	if u5 then
+		u5:Destroy();
+		u5 = nil;
+	end;
+	u5 = Instance.new("ScreenGui");
+	u5.Name = "ControlGui";
+	local v10 = Instance.new("Frame");
+	v10.Name = "BottomLeftControl";
+	v10.Size = UDim2.new(0, 130, 0, 46);
+	v10.Position = UDim2.new(0, 0, 1, -46);
+	v10.BackgroundTransparency = 1;
+	v10.Parent = u5;
+	u3 = Instance.new("ImageButton");
+	u3.Name = "MouseLockLabel";
+	u3.Size = UDim2.new(0, 31, 0, 31);
+	u3.Position = UDim2.new(0, 12, 0, 2);
+	u3.BackgroundTransparency = 1;
+	if u2 then
+		local v11 = "rbxasset://textures/ui/mouseLock_on.png";
+	else
+		v11 = "rbxasset://textures/ui/mouseLock_off.png";
+	end;
+	u3.Image = v11;
+	u3.Visible = u6;
+	u3.Parent = v10;
+	u3.MouseButton1Click:connect(u7);
+	u5.Parent = l__PlayerGui__8;
+end;
+l__LocalPlayer__6.CharacterAdded:connect(function(p11)
+	if not l__UserInputService__4.TouchEnabled then
+		u16();
+	end;
+end);
+if not l__UserInputService__4.TouchEnabled then
+	u16();
+	if v8() then
+		u10 = l__UserInputService__4.InputBegan:connect(u13);
+		u11 = true;
+	end;
+end;
+return v5;
