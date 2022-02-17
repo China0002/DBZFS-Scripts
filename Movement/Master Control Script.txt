@@ -1,0 +1,137 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local v1 = Vector3.new(0, 0, 0);
+local v2 = {};
+local l__Players__3 = game:GetService("Players");
+local l__RunService__4 = game:GetService("RunService");
+while not l__Players__3.LocalPlayer do
+	l__Players__3.PlayerAdded:wait();
+end;
+local l__LocalPlayer__5 = l__Players__3.LocalPlayer;
+local v6 = Vector3.new(0, 0, 0);
+local v7 = Instance.new("BindableEvent");
+v7.Name = "ClickToMoveFailStateChanged";
+local u1 = l__LocalPlayer__5.Character;
+local u2 = nil;
+function v2.GetHumanoid(p1)
+	if not u1 then
+		return;
+	end;
+	if u2 then
+		return u2;
+	end;
+	u2 = u1:FindFirstChildOfClass("Humanoid");
+	return u2;
+end;
+local u3 = nil;
+local u4 = nil;
+local function v8(p2)
+	if u3 then
+		u3:disconnect();
+	end;
+	if u4 then
+		u4:disconnect();
+	end;
+	u1 = p2;
+	u2 = u1:FindFirstChildOfClass("Humanoid");
+	u3 = p2.AncestryChanged:connect(function()
+		if p2.Parent == nil then
+			u1 = nil;
+			return;
+		end;
+		u1 = p2;
+	end);
+	u4 = p2.ChildRemoved:connect(function(p3)
+		if p3 == u2 then
+			u2 = nil;
+		end;
+	end);
+end;
+if u1 then
+	v8(u1);
+end;
+l__LocalPlayer__5.CharacterAdded:connect(v8);
+local u5 = true;
+local l__GetHumanoid__6 = v2.GetHumanoid;
+local u7 = true;
+local u8 = false;
+local u9 = Enum.HumanoidStateType.Jumping;
+local u10 = Enum.HumanoidStateType.Freefall;
+local u11 = Enum.HumanoidStateType.Landed;
+local l__Move__12 = l__LocalPlayer__5.Move;
+local u13 = v6;
+local function u14()
+	if not u5 then
+		return;
+	end;
+	local v9 = l__GetHumanoid__6();
+	if not v9 then
+		return;
+	end;
+	if u7 and u8 and not v9.PlatformStand then
+		local v10 = v9:GetState();
+		if v10 ~= u9 and v10 ~= u10 and v10 ~= u11 then
+			v9.Jump = u8;
+		end;
+	end;
+	l__Move__12(l__LocalPlayer__5, u13, true);
+end;
+function v2.Init(p4)
+	l__RunService__4:BindToRenderStep("MasterControlStep", Enum.RenderPriority.Input.Value, u14);
+end;
+function v2.Enable(p5)
+	u5 = true;
+	u7 = true;
+	if p5.ControlState.Current then
+		p5.ControlState.Current:Enable();
+	end;
+end;
+function v2.Disable(p6)
+	if p6.ControlState.Current then
+		p6.ControlState.Current:Disable();
+	end;
+	u14();
+	u8 = false;
+	u5 = false;
+end;
+function v2.EnableJump(p7)
+	u7 = true;
+	if u5 and p7.ControlState:IsTouchJumpModuleUsed() then
+		p7.TouchJumpModule:Enable();
+	end;
+end;
+function v2.DisableJump(p8)
+	u7 = false;
+	if p8.ControlState:IsTouchJumpModuleUsed() then
+		p8.TouchJumpModule:Disable();
+	end;
+end;
+function v2.AddToPlayerMovement(p9, p10)
+	u13 = Vector3.new(u13.X + p10.X, u13.Y + p10.Y, u13.Z + p10.Z);
+end;
+function v2.GetMoveVector(p11)
+	return u13;
+end;
+function v2.SetIsJumping(p12, p13)
+	if not u7 then
+		return;
+	end;
+	u8 = p13;
+	local v11 = p12:GetHumanoid();
+	if v11 and not v11.PlatformStand then
+		v11.Jump = u8;
+	end;
+end;
+function v2.DoJump(p14)
+	if not u7 then
+		return;
+	end;
+	local v12 = p14:GetHumanoid();
+	if v12 then
+		v12.Jump = true;
+	end;
+end;
+function v2.GetClickToMoveFailStateChanged(p15)
+	return v7;
+end;
+return v2;

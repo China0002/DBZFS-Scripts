@@ -1,0 +1,405 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local l__Players__1 = game:GetService("Players");
+local l__UserInputService__2 = game:GetService("UserInputService");
+local l__GuiService__3 = game:GetService("GuiService");
+local l__RunService__4 = game:GetService("RunService");
+local v5 = require(script.Parent);
+local v6 = {};
+while not l__Players__1.LocalPlayer do
+	l__Players__1.PlayerAdded:wait();
+end;
+local v7 = {};
+local v8 = Vector3.new(0, 0, 0);
+local v9 = { 0.31000000000000005, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95 };
+local u1 = nil;
+local function u2()
+	return u1 and u1.Visible;
+end;
+local l__LocalPlayer__3 = l__Players__1.LocalPlayer;
+local u4 = false;
+local u5 = false;
+local function u6(p1)
+	if p1 and u2() then
+		u4 = p1.AutoJumpEnabled == false and l__LocalPlayer__3.DevTouchMovementMode == Enum.DevTouchMovementMode.UserChoice;
+		p1.AutoJumpEnabled = true;
+	end;
+end;
+local function v10(p2)
+	for v11, v12 in ipairs(l__LocalPlayer__3.Character:GetChildren()) do
+		if v12:IsA("Tool") then
+			u5 = true;
+		end;
+	end;
+	p2.ChildAdded:Connect(function(p3)
+		if p3:IsA("Tool") then
+			u5 = true;
+			return;
+		end;
+		if p3:IsA("Humanoid") then
+			u6(p3);
+		end;
+	end);
+	p2.ChildRemoved:Connect(function(p4)
+		if p4:IsA("Tool") then
+			u5 = false;
+		end;
+	end);
+	local v13 = p2:FindFirstChildOfClass("Humanoid");
+	if v13 then
+		u6(v13);
+	end;
+end;
+l__LocalPlayer__3.CharacterAdded:Connect(v10);
+if l__LocalPlayer__3.Character then
+	v10(l__LocalPlayer__3.Character);
+end;
+local u7 = false;
+function v6.Enable(p5)
+	u7 = true;
+	u1.Visible = true;
+	u6((v5:GetHumanoid()));
+end;
+local u8 = nil;
+function v6.Disable(p6)
+	u7 = false;
+	if u4 then
+		local v14 = v5:GetHumanoid();
+		if v14 then
+			v14.AutoJumpEnabled = false;
+		end;
+	end;
+	u1.Visible = false;
+	u8();
+end;
+local u9 = nil;
+local u10 = nil;
+local u11 = nil;
+local u12 = nil;
+local u13 = nil;
+local u14 = nil;
+local u15 = #v9;
+local u16 = {};
+local u17 = v8;
+local u18 = 0.3;
+local u19 = 0.5;
+local u20 = false;
+local u21 = false;
+function v6.Create(p7, p8)
+	if u1 then
+		u1:Destroy();
+		u1 = nil;
+		if u9 then
+			u9:disconnect();
+			u9 = nil;
+		end;
+		if u10 then
+			u10:disconnect();
+			u10 = nil;
+		end;
+		if u11 then
+			u11:disconnect();
+			u11 = nil;
+		end;
+		if u12 then
+			u12:disconnect();
+			u12 = nil;
+		end;
+	end;
+	local v15 = 40;
+	local v16 = 58;
+	local v17 = 13;
+	local v18 = v17 + 5;
+	local v19 = 2;
+	local v20 = 50;
+	local l__AbsoluteSize__21 = p8.AbsoluteSize;
+	if math.min(l__AbsoluteSize__21.x, l__AbsoluteSize__21.y) > 500 then
+		v15 = v15 * 2;
+		v16 = v16 * 2;
+		v17 = v17 * 2;
+		v18 = v18 * 2;
+		v19 = v19 * 2;
+		v20 = v20 * 2;
+	end;
+	local v22 = Color3.fromRGB(255, 255, 255);
+	local function v23(p9)
+		if p9 then
+			u1.Size = UDim2.new(1, 0, 0.4, 0);
+			u1.Position = UDim2.new(0, 0, 0.6, 0);
+			return;
+		end;
+		u1.Size = UDim2.new(1, 0, 0.5, 18);
+		u1.Position = UDim2.new(0, 0, 0.5, -18);
+	end;
+	u1 = Instance.new("Frame");
+	u1.Name = "DynamicThumbstickFrame";
+	u1.Active = false;
+	u1.Visible = false;
+	u1.BackgroundTransparency = 1;
+	u1.BackgroundColor3 = Color3.fromRGB(0, 0, 0);
+	v23();
+	u13 = Instance.new("ImageLabel");
+	u13.Name = "ThumbstickStart";
+	u13.Visible = false;
+	u13.BackgroundTransparency = 1;
+	u13.Image = "rbxasset://textures/ui/Input/Ring_padded.png";
+	u13.AnchorPoint = Vector2.new(0.5, 0.5);
+	u13.Parent = u1;
+	u14 = Instance.new("ImageLabel");
+	u14.Name = "ThumbstickEnd";
+	u14.Visible = false;
+	u14.BackgroundTransparency = 1;
+	u14.Image = "rbxasset://textures/ui/Input/Disk_padded.png";
+	u14.ImageTransparency = 0.2;
+	u14.AnchorPoint = Vector2.new(0.5, 0.5);
+	u14.Parent = u1;
+	for v24 = 1, u15 do
+		u16[v24] = Instance.new("ImageLabel");
+		u16[v24].Name = "ThumbstickMiddle";
+		u16[v24].Visible = false;
+		u16[v24].BackgroundTransparency = 1;
+		u16[v24].Image = "rbxasset://textures/ui/Input/Disk_padded.png";
+		u16[v24].ImageTransparency = v9[v24];
+		u16[v24].AnchorPoint = Vector2.new(0.5, 0.5);
+		u16[v24].Parent = u1;
+	end;
+	local u22 = nil;
+	local function v25(p10)
+		if p10 == "CurrentCamera" then
+			if u22 then
+				u22:Disconnect();
+				u22 = nil;
+			end;
+			local l__CurrentCamera__26 = workspace.CurrentCamera;
+			if l__CurrentCamera__26 then
+				local l__ViewportSize__27 = l__CurrentCamera__26.ViewportSize;
+				local v28 = l__ViewportSize__27.X < l__ViewportSize__27.Y;
+				v23(v28);
+				local u23 = l__ViewportSize__27;
+				local u24 = v28;
+				u22 = l__CurrentCamera__26:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+					u23 = l__CurrentCamera__26.ViewportSize;
+					u24 = u23.X < u23.Y;
+					v23(u24);
+				end);
+			end;
+		end;
+	end;
+	workspace.Changed:Connect(v25);
+	if workspace.CurrentCamera then
+		v25("CurrentCamera");
+	end;
+	local u25 = nil;
+	local u26 = nil;
+	u11 = l__RunService__4.RenderStepped:Connect(function(p11)
+		if u25 ~= nil then
+			local v29 = tick() - u25;
+			local v30 = u18 * 2 * u19;
+			u1.BackgroundTransparency = 1 - 0.35 * math.min(v29 / v30, 1);
+			if v30 < v29 then
+				u26 = tick();
+				u25 = nil;
+				return;
+			end;
+		elseif u26 ~= nil then
+			local v31 = tick() - u26;
+			local v32 = u18 * 2 - u18 * 2 * u19;
+			u1.BackgroundTransparency = 0.65 + 0.35 * math.min(v31 / v32, 1);
+			if v32 < v31 then
+				u26 = nil;
+			end;
+		end;
+	end);
+	local u27 = nil;
+	local function u28(p12, p13)
+		local v33 = v15 / 2 + v17;
+		local v34 = p13 - p12;
+		local v35 = v34.magnitude - v15 / 2 - v16 / 2 - v17 / 2;
+		local l__unit__36 = v34.unit;
+		if v35 < v33 + v18 * u15 then
+			local v37 = v18;
+		else
+			v37 = v35 / u15;
+		end;
+		for v38 = 1, u15 do
+			local v39 = nil;
+			v39 = u16[v38];
+			local v40 = v33 + v37 * (v38 - 1);
+			if v40 < v35 then
+				local v41 = p13 - l__unit__36 * v40;
+				v39.Visible = true;
+				v39.Position = UDim2.new(0, v41.X, 0, v41.Y);
+				v39.Size = UDim2.new(0, v17, 0, v17);
+			else
+				v39.Visible = false;
+			end;
+		end;
+	end;
+	local u29 = nil;
+	local u30 = nil;
+	local u31 = nil;
+	local u32 = nil;
+	local u33 = nil;
+	u1.InputBegan:connect(function(p14)
+		if p14.UserInputType ~= Enum.UserInputType.Touch or p14.UserInputState ~= Enum.UserInputState.Begin then
+			return;
+		end;
+		if u29 then
+			if not u30 then
+				u30 = p14;
+				u31 = tick();
+				u32 = p14.Position;
+			end;
+			return;
+		end;
+		u29 = p14;
+		u33 = tick();
+		u27 = p14.Position;
+		local v42 = Vector2.new(p14.Position.X - u1.AbsolutePosition.X, p14.Position.Y - u1.AbsolutePosition.Y);
+		u13.Visible = true;
+		u13.Position = UDim2.new(0, v42.X, 0, v42.Y);
+		u13.Size = UDim2.new(0, v16, 0, v16);
+		u14.Visible = true;
+		u14.Position = u13.Position;
+		u14.Size = UDim2.new(0, v15, 0, v15);
+		local v43 = l__LocalPlayer__3:FindFirstChildOfClass("PlayerGui");
+		local v44 = false;
+		if v43 then
+			if v43.CurrentScreenOrientation == Enum.ScreenOrientation.LandscapeLeft or v43.CurrentScreenOrientation == Enum.ScreenOrientation.LandscapeRight then
+				v44 = u20;
+				u20 = true;
+			elseif v43.CurrentScreenOrientation == Enum.ScreenOrientation.Portrait then
+				v44 = u21;
+				u21 = true;
+			end;
+		end;
+		if not v44 then
+			u18 = 0.3;
+			u19 = 0.5;
+			u25 = tick();
+		end;
+	end);
+	local function u34(p15)
+		v5:AddToPlayerMovement(-u17);
+		u17 = p15;
+		if u17.magnitude < v19 then
+			u17 = Vector3.new();
+		else
+			u17 = u17.unit * (1 - math.max(0, (v20 - u17.magnitude) / v20));
+			u17 = Vector3.new(u17.x, 0, u17.y);
+		end;
+		v5:AddToPlayerMovement(u17);
+	end;
+	local function u35(p16)
+		local v45 = Vector2.new(u27.X, u27.Y) - u1.AbsolutePosition;
+		local v46 = Vector2.new(p16.X, p16.Y) - u1.AbsolutePosition;
+		local v47 = v46 - v45;
+		local v48 = v47 * math.min(v47.magnitude, u1.AbsoluteSize.X);
+		u14.Position = UDim2.new(0, v46.X, 0, v46.Y);
+		u14.Size = UDim2.new(0, v15, 0, v15);
+		u28(v45, v46);
+	end;
+	u9 = l__UserInputService__2.TouchMoved:connect(function(p17, p18)
+		if p17 == u29 then
+			local v49 = Vector2.new(p17.Position.x - u27.x, p17.Position.y - u27.y);
+			if math.abs(v49.x) > 0 or math.abs(v49.y) > 0 then
+				u34(v49);
+				u35(p17.Position);
+			end;
+		end;
+	end);
+	u8 = function()
+		u13.Visible = false;
+		u14.Visible = false;
+		for v50 = 1, u15 do
+			u16[v50].Visible = false;
+		end;
+		u29 = nil;
+		v5:AddToPlayerMovement(-u17);
+		u17 = Vector3.new(0, 0, 0);
+	end;
+	if not pcall(function()
+		local function u36(p19, p20)
+			if p19.X < p20.AbsolutePosition.X + p20.AbsoluteSize.X and p20.AbsolutePosition.X < p19.X and p19.Y < p20.AbsolutePosition.Y + p20.AbsoluteSize.Y and p20.AbsolutePosition.Y < p19.Y then
+				return true;
+			end;
+			return false;
+		end;
+		u12 = l__UserInputService__2.TouchTapInWorld:connect(function(p21, p22)
+			if not p22 and u7 and not u5 and u36(p21, u1) then
+				v5:DoJump();
+			end;
+		end);
+	end) then
+		local function u37(p23, p24, p25)
+			if not u5 and tick() - p23 < 0.5 and (p25 - p24).magnitude < 25 then
+				v5:DoJump();
+			end;
+		end;
+		u10 = l__UserInputService__2.TouchEnded:connect(function(p26, p27)
+			if p26 == u29 then
+				u37(u33, u27, p26.Position);
+				u8();
+				return;
+			end;
+			if p26 == u30 then
+				u37(u31, u32, p26.Position);
+				u30 = nil;
+			end;
+		end);
+	else
+		u10 = l__UserInputService__2.TouchEnded:connect(function(p28, p29)
+			if p28 == u29 then
+				u8();
+				return;
+			end;
+			if p28 == u30 then
+				u30 = nil;
+			end;
+		end);
+	end;
+	l__GuiService__3.MenuOpened:connect(function()
+		if u29 then
+			u8();
+		end;
+		if u30 then
+			u30 = nil;
+		end;
+	end);
+	local v51 = l__LocalPlayer__3:FindFirstChildOfClass("PlayerGui");
+	while not v51 do
+		l__LocalPlayer__3.ChildAdded:wait();
+		v51 = l__LocalPlayer__3:FindFirstChildOfClass("PlayerGui");	
+	end;
+	local v52 = true;
+	if v51.CurrentScreenOrientation ~= Enum.ScreenOrientation.LandscapeLeft then
+		v52 = v51.CurrentScreenOrientation == Enum.ScreenOrientation.LandscapeRight;
+	end;
+	local u38 = nil;
+	local function u39()
+		u18 = 2.5;
+		u19 = 0.05;
+		u25 = tick();
+	end;
+	u38 = v51.Changed:connect(function(p30)
+		if p30 == "CurrentScreenOrientation" and (not (not v52) and v51.CurrentScreenOrientation == Enum.ScreenOrientation.Portrait or not v52 and v51.CurrentScreenOrientation ~= Enum.ScreenOrientation.Portrait) then
+			u38:disconnect();
+			u39();
+			if v52 then
+				u21 = true;
+				return;
+			end;
+			u20 = true;
+		end;
+	end);
+	u1.Parent = p8;
+	spawn(function()
+		if game:IsLoaded() then
+			u39();
+			return;
+		end;
+		game.Loaded:wait();
+		u39();
+	end);
+end;
+return v6;

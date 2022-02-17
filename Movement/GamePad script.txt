@@ -1,0 +1,173 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local v1 = {};
+local l__Players__2 = game:GetService("Players");
+local l__RunService__3 = game:GetService("RunService");
+local l__StarterPlayer__4 = game:GetService("StarterPlayer");
+local l__GameSettings__5 = UserSettings().GameSettings;
+while not l__Players__2.LocalPlayer do
+	wait();
+end;
+local l__UserInputService__1 = game:GetService("UserInputService");
+local u2 = nil;
+function assignActivateGamepad()
+	local v6 = l__UserInputService__1:GetConnectedGamepads();
+	if 0 < #v6 then
+		local v7 = #v6;
+		local v8 = 1 - 1;
+		while true do
+			if u2 == nil then
+				u2 = v6[v8];
+			elseif v6[v8].Value < u2.Value then
+				u2 = v6[v8];
+			end;
+			if 0 <= 1 then
+				if v8 < v7 then
+
+				else
+					break;
+				end;
+			elseif v7 < v8 then
+
+			else
+				break;
+			end;
+			v8 = v8 + 1;		
+		end;
+	end;
+	if u2 == nil then
+		u2 = Enum.UserInputType.Gamepad1;
+	end;
+end;
+local l__LocalPlayer__3 = l__Players__2.LocalPlayer;
+local u4 = require(script.Parent);
+local u5 = Vector3.new(0, 0, 0);
+local l__ContextActionService__6 = game:GetService("ContextActionService");
+local u7 = nil;
+local u8 = nil;
+function v1.Enable(p1)
+	local l__Move__9 = l__LocalPlayer__3.Move;
+	local u9 = 0;
+	local u10 = 0;
+	local u11 = 0;
+	local u12 = 0;
+	local function u13(p2)
+		if l__LocalPlayer__3 and l__LocalPlayer__3.Character then
+			u4:AddToPlayerMovement(-u5);
+			u5 = Vector3.new(u9 + u10, 0, u11 + u12);
+			u4:AddToPlayerMovement(u5);
+		end;
+	end;
+	local function v10()
+		if u2 then
+			l__ContextActionService__6:UnbindActivate(u2, Enum.KeyCode.ButtonR2);
+		end;
+		assignActivateGamepad();
+		if u2 then
+			l__ContextActionService__6:BindActivate(u2, Enum.KeyCode.ButtonR2);
+		end;
+	end;
+	l__ContextActionService__6:BindAction("JumpButton", function(p3, p4, p5)
+		if u2 ~= p5.UserInputType then
+			return;
+		end;
+		if p5.KeyCode ~= Enum.KeyCode.ButtonA then
+			return;
+		end;
+		if p4 == Enum.UserInputState.Cancel then
+			u4:SetIsJumping(false);
+			return;
+		end;
+		u4:SetIsJumping(p5.UserInputState == Enum.UserInputState.Begin);
+	end, false, Enum.KeyCode.ButtonA);
+	l__ContextActionService__6:BindAction("MoveThumbstick", function(p6, p7, p8)
+		if u2 ~= p8.UserInputType then
+			return;
+		end;
+		if p8.KeyCode ~= Enum.KeyCode.Thumbstick1 then
+			return;
+		end;
+		if p7 == Enum.UserInputState.Cancel then
+			u4:AddToPlayerMovement(-u5);
+			u5 = Vector3.new(0, 0, 0);
+			return;
+		end;
+		if not (p8.Position.magnitude > 0.22) then
+			u4:AddToPlayerMovement(-u5);
+			u5 = Vector3.new(0, 0, 0);
+			return;
+		end;
+		u4:AddToPlayerMovement(-u5);
+		u5 = Vector3.new(p8.Position.X, 0, -p8.Position.Y);
+		u4:AddToPlayerMovement(u5);
+	end, false, Enum.KeyCode.Thumbstick1);
+	v10();
+	if not l__UserInputService__1:GamepadSupports(u2, Enum.KeyCode.Thumbstick1) then
+		l__ContextActionService__6:BindAction("forwardDpad", function(p9, p10, p11)
+			if p10 == Enum.UserInputState.End then
+				u11 = -1;
+			elseif p10 == Enum.UserInputState.Begin or p10 == Enum.UserInputState.Cancel then
+				u11 = 0;
+			end;
+			u13(p11.UserInputType);
+		end, false, Enum.KeyCode.DPadUp);
+		l__ContextActionService__6:BindAction("backwardDpad", function(p12, p13, p14)
+			if p13 == Enum.UserInputState.End then
+				u12 = 1;
+			elseif p13 == Enum.UserInputState.Begin or p13 == Enum.UserInputState.Cancel then
+				u12 = 0;
+			end;
+			u13(p14.UserInputType);
+		end, false, Enum.KeyCode.DPadDown);
+		l__ContextActionService__6:BindAction("leftDpad", function(p15, p16, p17)
+			if p16 == Enum.UserInputState.End then
+				u9 = -1;
+			elseif p16 == Enum.UserInputState.Begin or p16 == Enum.UserInputState.Cancel then
+				u9 = 0;
+			end;
+			u13(p17.UserInputType);
+		end, false, Enum.KeyCode.DPadLeft);
+		l__ContextActionService__6:BindAction("rightDpad", function(p18, p19, p20)
+			if p19 == Enum.UserInputState.End then
+				u10 = 1;
+			elseif p19 == Enum.UserInputState.Begin or p19 == Enum.UserInputState.Cancel then
+				u10 = 0;
+			end;
+			u13(p20.UserInputType);
+		end, false, Enum.KeyCode.DPadRight);
+	end;
+	u7 = l__UserInputService__1.GamepadDisconnected:connect(function(p21)
+		if u2 ~= p21 then
+			return;
+		end;
+		u4:AddToPlayerMovement(-u5);
+		u5 = Vector3.new(0, 0, 0);
+		u2 = nil;
+		v10();
+	end);
+	u8 = l__UserInputService__1.GamepadConnected:connect(function(p22)
+		if u2 == nil then
+			v10();
+		end;
+	end);
+end;
+function v1.Disable(p23)
+	l__ContextActionService__6:UnbindAction("forwardDpad");
+	l__ContextActionService__6:UnbindAction("backwardDpad");
+	l__ContextActionService__6:UnbindAction("leftDpad");
+	l__ContextActionService__6:UnbindAction("rightDpad");
+	l__ContextActionService__6:UnbindAction("MoveThumbstick");
+	l__ContextActionService__6:UnbindAction("JumpButton");
+	l__ContextActionService__6:UnbindActivate(u2, Enum.KeyCode.ButtonR2);
+	if u7 then
+		u7:disconnect();
+	end;
+	if u8 then
+		u8:disconnect();
+	end;
+	u2 = nil;
+	u4:AddToPlayerMovement(-u5);
+	u5 = Vector3.new(0, 0, 0);
+	u4:SetIsJumping(false);
+end;
+return v1;

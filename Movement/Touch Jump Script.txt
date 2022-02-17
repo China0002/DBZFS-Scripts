@@ -1,0 +1,133 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local l__Players__1 = game:GetService("Players");
+local v2 = {};
+local v3 = require(script.Parent);
+while not l__Players__1.LocalPlayer do
+	wait();
+end;
+local u1 = nil;
+local u2 = nil;
+local u3 = v3:GetHumanoid();
+local u4 = false;
+local u5 = 0;
+local u6 = true;
+local function u7()
+	if u3 and u4 and u4 and u3.JumpPower > 0 then
+		u1.Visible = true;
+	end;
+end;
+local function u8()
+	u1.Visible = false;
+	u2();
+end;
+local function u9()
+	if u5 > 0 and u6 then
+		u7();
+		return;
+	end;
+	u8();
+end;
+local u10 = nil;
+local function u11(p1)
+	if p1 == "JumpPower" then
+		u5 = u3.JumpPower;
+		u9();
+		return;
+	end;
+	if p1 == "Parent" and not u3.Parent then
+		u10:disconnect();
+	end;
+end;
+local u12 = nil;
+local function u13(p2, p3)
+	if p2 == Enum.HumanoidStateType.Jumping then
+		u6 = p3;
+		u9();
+	end;
+end;
+local u14 = nil;
+local l__LocalPlayer__15 = l__Players__1.LocalPlayer;
+local function u16(p4)
+	if u10 then
+		u10:disconnect();
+	end;
+	u3 = nil;
+	while true do
+		u3 = v3:GetHumanoid();
+		wait();
+		if u3 and u3.Parent == p4 then
+			break;
+		end;	
+	end;
+	u10 = u3.Changed:connect(u11);
+	u12 = u3.StateEnabledChanged:connect(u13);
+	u5 = u3.JumpPower;
+	u6 = u3:GetStateEnabled(Enum.HumanoidStateType.Jumping);
+	u9();
+end;
+function v2.Enable(p5)
+	u4 = true;
+	u7();
+end;
+function v2.Disable(p6)
+	u4 = false;
+	u8();
+end;
+local l__GuiService__17 = game:GetService("GuiService");
+local function u18()
+	u14 = l__LocalPlayer__15.CharacterAdded:connect(u16);
+	if l__LocalPlayer__15.Character then
+		u16(l__LocalPlayer__15.Character);
+	end;
+end;
+function v2.Create(p7, p8)
+	if u1 then
+		u1:Destroy();
+		u1 = nil;
+	end;
+	local v4 = math.min(p8.AbsoluteSize.x, p8.AbsoluteSize.y) <= 500;
+	if v4 then
+		local v5 = 70;
+	else
+		v5 = 120;
+	end;
+	u1 = Instance.new("ImageButton");
+	u1.Name = "JumpButton";
+	u1.Visible = false;
+	u1.BackgroundTransparency = 1;
+	u1.Image = "rbxasset://textures/ui/TouchControlsSheet.png";
+	u1.ImageRectOffset = Vector2.new(176, 222);
+	u1.ImageRectSize = Vector2.new(174, 174);
+	u1.Size = UDim2.new(0, v5, 0, v5);
+	u1.Position = v4 and UDim2.new(1, -(v5 * 1.5 - 10), 1, -v5 - 20) or UDim2.new(1, -(v5 * 1.5 - 10), 1, -v5 * 1.75);
+	local u19 = nil;
+	u1.InputBegan:connect(function(p9)
+		if not (not u19) or p9.UserInputType ~= Enum.UserInputType.Touch or p9.UserInputState ~= Enum.UserInputState.Begin then
+			return;
+		end;
+		u19 = p9;
+		u1.ImageRectOffset = Vector2.new(0, 222);
+		v3:SetIsJumping(true);
+	end);
+	u2 = function()
+		u19 = nil;
+		v3:SetIsJumping(false);
+		u1.ImageRectOffset = Vector2.new(176, 222);
+	end;
+	u1.InputEnded:connect(function(p10)
+		if p10 == u19 then
+			u2();
+		end;
+	end);
+	l__GuiService__17.MenuOpened:connect(function()
+		if u19 then
+			u2();
+		end;
+	end);
+	if not u14 then
+		u18();
+	end;
+	u1.Parent = p8;
+end;
+return v2;

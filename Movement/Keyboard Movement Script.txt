@@ -1,0 +1,139 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local l__Players__1 = game:GetService("Players");
+local l__StarterPlayer__2 = game:GetService("StarterPlayer");
+local l__GameSettings__3 = UserSettings().GameSettings;
+local v4 = {};
+while not l__Players__1.LocalPlayer do
+	wait();
+end;
+local l__LocalPlayer__1 = l__Players__1.LocalPlayer;
+local u2 = nil;
+local l__UserInputService__3 = game:GetService("UserInputService");
+local u4 = require(script.Parent);
+local u5 = Vector3.new(0, 0, 0);
+local l__ContextActionService__6 = game:GetService("ContextActionService");
+local function u7()
+	local v5 = l__LocalPlayer__1 and l__LocalPlayer__1.Character;
+	if v5 then
+		if u2 and u2.Parent == v5 then
+			return u2;
+		end;
+		u2 = nil;
+		for v6, v7 in pairs(v5:GetChildren()) do
+			if v7:IsA("Humanoid") then
+				u2 = v7;
+				return u2;
+			end;
+		end;
+	end;
+end;
+local u8 = nil;
+local u9 = nil;
+local u10 = nil;
+local u11 = nil;
+function v4.Enable(p1)
+	if not l__UserInputService__3.KeyboardEnabled then
+		return;
+	end;
+	local u12 = 0;
+	local u13 = 0;
+	local u14 = 0;
+	local u15 = 0;
+	local function u16(p2)
+		if p2 == Enum.UserInputState.Cancel then
+			u4:AddToPlayerMovement(-u5);
+			u5 = Vector3.new(0, 0, 0);
+			return;
+		end;
+		u4:AddToPlayerMovement(-u5);
+		u5 = Vector3.new(u12 + u13, 0, u14 + u15);
+		u4:AddToPlayerMovement(u5);
+	end;
+	l__ContextActionService__6:BindActionToInputTypes("forwardMovement", function(p3, p4, p5)
+		if p4 == Enum.UserInputState.Begin then
+			u14 = -1;
+		elseif p4 == Enum.UserInputState.End then
+			u14 = 0;
+		end;
+		u16(p4);
+	end, false, Enum.PlayerActions.CharacterForward);
+	l__ContextActionService__6:BindActionToInputTypes("backwardMovement", function(p6, p7, p8)
+		if p7 == Enum.UserInputState.Begin then
+			u15 = 1;
+		elseif p7 == Enum.UserInputState.End then
+			u15 = 0;
+		end;
+		u16(p7);
+	end, false, Enum.PlayerActions.CharacterBackward);
+	l__ContextActionService__6:BindActionToInputTypes("leftMovement", function(p9, p10, p11)
+		if p10 == Enum.UserInputState.Begin then
+			u12 = -1;
+		elseif p10 == Enum.UserInputState.End then
+			u12 = 0;
+		end;
+		u16(p10);
+	end, false, Enum.PlayerActions.CharacterLeft);
+	l__ContextActionService__6:BindActionToInputTypes("rightMovement", function(p12, p13, p14)
+		if p13 == Enum.UserInputState.Begin then
+			u13 = 1;
+		elseif p13 == Enum.UserInputState.End then
+			u13 = 0;
+		end;
+		u16(p13);
+	end, false, Enum.PlayerActions.CharacterRight);
+	l__ContextActionService__6:BindActionToInputTypes("jumpAction", function(p15, p16, p17)
+		u4:SetIsJumping(p16 == Enum.UserInputState.Begin);
+	end, false, Enum.PlayerActions.CharacterJump);
+	local function v8()
+		if u7() then
+			u4:AddToPlayerMovement(-u5);
+			u5 = Vector3.new(0, 0, 0);
+			u14 = 0;
+			u15 = 0;
+			u12 = 0;
+			u13 = 0;
+			u4:SetIsJumping(false);
+		end;
+	end;
+	u8 = l__UserInputService__3.InputBegan:connect(function(p18, p19)
+		if p18.KeyCode == Enum.KeyCode.Backspace and not p19 then
+			local v9 = u7();
+			if v9 and v9.Sit then
+				u4:DoJump();
+			end;
+		end;
+	end);
+	u9 = l__UserInputService__3.TextBoxFocusReleased:connect(v8);
+	u10 = l__UserInputService__3.TextBoxFocused:connect(function(p20)
+		u4:SetIsJumping(false);
+	end);
+	u11 = l__UserInputService__3.WindowFocused:connect(v8);
+end;
+function v4.Disable(p21)
+	l__ContextActionService__6:UnbindAction("forwardMovement");
+	l__ContextActionService__6:UnbindAction("backwardMovement");
+	l__ContextActionService__6:UnbindAction("leftMovement");
+	l__ContextActionService__6:UnbindAction("rightMovement");
+	l__ContextActionService__6:UnbindAction("jumpAction");
+	if u8 then
+		u8:disconnect();
+		u8 = nil;
+	end;
+	if u9 then
+		u9:disconnect();
+		u9 = nil;
+	end;
+	if u10 then
+		u10:disconnect();
+		u10 = nil;
+	end;
+	if u11 then
+		u11:disconnect();
+		u11 = nil;
+	end;
+	u4:AddToPlayerMovement(-u5);
+	u5 = Vector3.new(0, 0, 0);
+	u4:SetIsJumping(false);
+end;
+return v4;

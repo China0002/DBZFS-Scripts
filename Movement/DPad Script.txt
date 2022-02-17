@@ -1,0 +1,116 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local l__Players__1 = game:GetService("Players");
+local v2 = {};
+while not l__Players__1.LocalPlayer do
+	wait();
+end;
+local l__LocalPlayer__3 = l__Players__1.LocalPlayer;
+local u1 = nil;
+function v2.Enable(p1)
+	u1.Visible = true;
+end;
+local u2 = nil;
+function v2.Disable(p2)
+	u1.Visible = false;
+	u2();
+end;
+local function u3(p3, p4, p5, p6, p7)
+	local v4 = Instance.new("ImageLabel");
+	v4.Name = p3;
+	v4.Image = "rbxasset://textures/ui/DPadSheet.png";
+	v4.ImageRectOffset = p6;
+	v4.ImageRectSize = p7;
+	v4.BackgroundTransparency = 1;
+	v4.Size = p5;
+	v4.Position = p4;
+	v4.Parent = u1;
+	return v4;
+end;
+local u4 = require(script.Parent);
+local function u5()
+	return Vector2.new(u1.AbsolutePosition.x + u1.AbsoluteSize.x / 2, u1.AbsolutePosition.y + u1.AbsoluteSize.y / 2);
+end;
+local l__math_atan2__6 = math.atan2;
+local l__math_pi__7 = math.pi;
+local l__math_floor__8 = math.floor;
+local u9 = { Vector3.new(1, 0, 0), Vector3.new(1, 0, 1).unit, Vector3.new(0, 0, 1), Vector3.new(-1, 0, 1).unit, Vector3.new(-1, 0, 0), Vector3.new(-1, 0, -1).unit, Vector3.new(0, 0, -1), Vector3.new(1, 0, -1).unit };
+local u10 = nil;
+local l__GuiService__11 = game:GetService("GuiService");
+function v2.Create(p8, p9)
+	if u1 then
+		u1:Destroy();
+		u1 = nil;
+	end;
+	u1 = Instance.new("Frame");
+	u1.Name = "DPadFrame";
+	u1.Active = true;
+	u1.Visible = false;
+	u1.Size = UDim2.new(0, 192, 0, 192);
+	u1.Position = UDim2.new(0, 10, 1, -230);
+	u1.BackgroundTransparency = 1;
+	local v5 = UDim2.new(0, 23, 0, 23);
+	local v6 = UDim2.new(0, 64, 0, 64);
+	local v7 = Vector2.new(46, 46);
+	local v8 = Vector2.new(128, 128);
+	local v9 = u3("BackButton", UDim2.new(0.5, -32, 1, -64), v6, Vector2.new(0, 0), v8);
+	local v10 = u3("ForwardButton", UDim2.new(0.5, -32, 0, 0), v6, Vector2.new(0, 258), v8);
+	local v11 = u3("LeftButton", UDim2.new(0, 0, 0.5, -32), v6, Vector2.new(129, 129), v8);
+	local v12 = u3("RightButton", UDim2.new(1, -64, 0.5, -32), v6, Vector2.new(0, 129), v8);
+	local v13 = u3("JumpButton", UDim2.new(0.5, -32, 0.5, -32), v6, Vector2.new(129, 0), v8);
+	local v14 = u3("ForwardLeftButton", UDim2.new(0, 35, 0, 35), v5, Vector2.new(129, 258), v7);
+	local v15 = u3("ForwardRightButton", UDim2.new(1, -55, 0, 35), v5, Vector2.new(176, 258), v7);
+	v14.Visible = false;
+	v15.Visible = false;
+	v13.InputBegan:connect(function(p10)
+		u4:DoJump();
+	end);
+	local u12 = Vector3.new(0, 0, 0);
+	local function u13(p11)
+		local v16 = u5();
+		local v17 = Vector2.new(p11.x - v16.x, p11.y - v16.y);
+		if v13.AbsoluteSize.x / 2 < v17.magnitude then
+			u12 = u9[l__math_floor__8(8 * l__math_atan2__6(v17.y, v17.x) / (2 * l__math_pi__7) + 8.5) % 8 + 1];
+		end;
+		if not v14.Visible and u12 == u9[7] then
+			v14.Visible = true;
+			v15.Visible = true;
+		end;
+	end;
+	u1.InputBegan:connect(function(p12)
+		if u10 or p12.UserInputType ~= Enum.UserInputType.Touch then
+			return;
+		end;
+		u4:AddToPlayerMovement(-u12);
+		u10 = p12;
+		u13(u10.Position);
+		u4:AddToPlayerMovement(u12);
+	end);
+	u1.InputChanged:connect(function(p13)
+		if p13 == u10 then
+			u4:AddToPlayerMovement(-u12);
+			u13(u10.Position);
+			u4:AddToPlayerMovement(u12);
+			u4:SetIsJumping(false);
+		end;
+	end);
+	u2 = function()
+		u10 = nil;
+		v14.Visible = false;
+		v15.Visible = false;
+		u4:AddToPlayerMovement(-u12);
+		u12 = Vector3.new(0, 0, 0);
+	end;
+	u1.InputEnded:connect(function(p14)
+		if p14 == u10 then
+			u2();
+		end;
+	end);
+	l__GuiService__11.MenuOpened:connect(function()
+		if u10 then
+			u2();
+		end;
+	end);
+	u1.Parent = p9;
+end;
+return v2;

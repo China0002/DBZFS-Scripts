@@ -1,0 +1,125 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local l__Players__1 = game:GetService("Players");
+local v2 = {};
+while not l__Players__1.LocalPlayer do
+	wait();
+end;
+local l__LocalPlayer__3 = l__Players__1.LocalPlayer;
+local u1 = nil;
+function v2.Enable(p1)
+	u1.Visible = true;
+end;
+local u2 = nil;
+function v2.Disable(p2)
+	u1.Visible = false;
+	u2();
+end;
+local u3 = nil;
+local u4 = nil;
+local u5 = require(script.Parent);
+local u6 = Vector3.new(0, 0, 0);
+local u7 = nil;
+local l__UserInputService__8 = game:GetService("UserInputService");
+local l__GuiService__9 = game:GetService("GuiService");
+function v2.Create(p3, p4)
+	if u1 then
+		u1:Destroy();
+		u1 = nil;
+		if u3 then
+			u3:disconnect();
+			u3 = nil;
+		end;
+		if u4 then
+			u4:disconnect();
+			u4 = nil;
+		end;
+	end;
+	local v4 = math.min(p4.AbsoluteSize.x, p4.AbsoluteSize.y) <= 500;
+	if v4 then
+		local v5 = 70;
+	else
+		v5 = 120;
+	end;
+	local v6 = v4 and UDim2.new(0, v5 / 2 - 10, 1, -v5 - 20) or UDim2.new(0, v5 / 2, 1, -v5 * 1.75);
+	u1 = Instance.new("Frame");
+	u1.Name = "ThumbstickFrame";
+	u1.Active = true;
+	u1.Visible = false;
+	u1.Size = UDim2.new(0, v5, 0, v5);
+	u1.Position = v6;
+	u1.BackgroundTransparency = 1;
+	local v7 = Instance.new("ImageLabel");
+	v7.Name = "OuterImage";
+	v7.Image = "rbxasset://textures/ui/TouchControlsSheet.png";
+	v7.ImageRectOffset = Vector2.new();
+	v7.ImageRectSize = Vector2.new(220, 220);
+	v7.BackgroundTransparency = 1;
+	v7.Size = UDim2.new(0, v5, 0, v5);
+	v7.Position = UDim2.new(0, 0, 0, 0);
+	v7.Parent = u1;
+	StickImage = Instance.new("ImageLabel");
+	StickImage.Name = "StickImage";
+	StickImage.Image = "rbxasset://textures/ui/TouchControlsSheet.png";
+	StickImage.ImageRectOffset = Vector2.new(220, 0);
+	StickImage.ImageRectSize = Vector2.new(111, 111);
+	StickImage.BackgroundTransparency = 1;
+	StickImage.Size = UDim2.new(0, v5 / 2, 0, v5 / 2);
+	StickImage.Position = UDim2.new(0, v5 / 2 - v5 / 4, 0, v5 / 2 - v5 / 4);
+	StickImage.ZIndex = 2;
+	StickImage.Parent = u1;
+	local u10 = nil;
+	u1.InputBegan:connect(function(p5)
+		if not (not u7) or p5.UserInputType ~= Enum.UserInputType.Touch or p5.UserInputState ~= Enum.UserInputState.Begin then
+			return;
+		end;
+		u7 = p5;
+		u1.Position = UDim2.new(0, p5.Position.x - u1.Size.X.Offset / 2, 0, p5.Position.y - u1.Size.Y.Offset / 2);
+		u10 = Vector2.new(u1.AbsolutePosition.x + u1.AbsoluteSize.x / 2, u1.AbsolutePosition.y + u1.AbsoluteSize.y / 2);
+		local v8 = Vector2.new(p5.Position.x - u10.x, p5.Position.y - u10.y);
+	end);
+	local function u11(p6)
+		u5:AddToPlayerMovement(-u6);
+		u6 = p6 / (v5 / 2);
+		local l__magnitude__9 = u6.magnitude;
+		if l__magnitude__9 < 0.05 then
+			u6 = Vector3.new();
+		else
+			u6 = u6.unit * ((l__magnitude__9 - 0.05) / 0.95);
+			u6 = Vector3.new(u6.x, 0, u6.y);
+		end;
+		u5:AddToPlayerMovement(u6);
+	end;
+	local function u12(p7)
+		local v10 = Vector2.new(p7.x - u10.x, p7.y - u10.y);
+		local v11 = v10.unit * math.min(v10.magnitude, u1.AbsoluteSize.x / 2);
+		StickImage.Position = UDim2.new(0, v11.x + StickImage.AbsoluteSize.x / 2, 0, v11.y + StickImage.AbsoluteSize.y / 2);
+	end;
+	u3 = l__UserInputService__8.TouchMoved:connect(function(p8, p9)
+		if p8 == u7 then
+			u10 = Vector2.new(u1.AbsolutePosition.x + u1.AbsoluteSize.x / 2, u1.AbsolutePosition.y + u1.AbsoluteSize.y / 2);
+			u11((Vector2.new(p8.Position.x - u10.x, p8.Position.y - u10.y)));
+			u12(p8.Position);
+		end;
+	end);
+	u2 = function()
+		u1.Position = v6;
+		StickImage.Position = UDim2.new(0, u1.Size.X.Offset / 2 - v5 / 4, 0, u1.Size.Y.Offset / 2 - v5 / 4);
+		u7 = nil;
+		u5:AddToPlayerMovement(-u6);
+		u6 = Vector3.new(0, 0, 0);
+		u5:SetIsJumping(false);
+	end;
+	u4 = l__UserInputService__8.TouchEnded:connect(function(p10, p11)
+		if p10 == u7 then
+			u2();
+		end;
+	end);
+	l__GuiService__9.MenuOpened:connect(function()
+		if u7 then
+			u2();
+		end;
+	end);
+	u1.Parent = p4;
+end;
+return v2;
